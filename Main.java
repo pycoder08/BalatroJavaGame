@@ -55,12 +55,12 @@ public class Main
 
     GameBoard board = new GameBoard();
     board.intializeBoard();
-    board.stampBoard(cardString.cardToLinesArray(), 5, 3, cardString.suitToColor());
+    board.dealHand();
+    //board.stampBoard(cardString.cardToLinesArray(), 21, 32, cardString.suitToColor());
     board.printBoard();
 
 
     StringBuilder sb = new StringBuilder();
-    sb.append("📃");
     System.out.println(sb.toString());
   }
   /***** STATIC METHODS *****/
