@@ -41,7 +41,8 @@ public class Main
     /***** PROCESSING SECTION *****/
 
     /***** OUTPUT SECTION *****/
-    
+    Card cardString = new Card(1, "Spades", false);
+    System.out.println(cardString.toString());
   }
   /***** STATIC METHODS *****/
 }

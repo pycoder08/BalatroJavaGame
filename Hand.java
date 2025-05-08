@@ -7,7 +7,7 @@
 
 /* UML CLASS DIAGRAM:
 -----------------------------------------
-<class name>
+Hand
 -----------------------------------------
 <data, i.e. variables>
 -----------------------------------------
@@ -15,10 +15,11 @@
 -----------------------------------------
 */
 
-public class ClassDefinition // don't forget to rename here and rename the file too!
+public class Hand
 {
 	/***** STATIC VARIABLES *****/
 
+	
 	/***** INSTANCE VARIABLES *****/
 
 	/***** CONSTRUCTORS *****/
