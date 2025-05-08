@@ -1,23 +1,58 @@
 /**
- * Represents <what is this class?>
+ * Represents A card in the game with a number, suit, and selection status.
  * 
- * @author <name>
+ * @author Muhammad Conn
  *
  **/
 
 /* UML CLASS DIAGRAM:
 -----------------------------------------
-<class name>
+Card
 -----------------------------------------
-<data, i.e. variables>
+- RESET: String
+- BLACK: String
+- RED: String
+- GREEN: String
+- YELLOW: String
+- BLUE: String
+- PURPLE: String
+- CYAN: String
+- WHITE: String
+- ORANGE: String
+- number: int
+- suit: String
+- isSelected: boolean
 -----------------------------------------
-<actions, i.e. methods>
++ GetNumber(): int
++ getSuit(): String
++ getSelected(): boolean
++ setNumber(number: int): void
++ setSuit(suit: String): void
++ setSelected(selected: boolean): void
++ setAll(number: int, suit: String, selected: boolean): void
++ toString(): String
++ equals(other: Card): boolean
++ cardToLines(line: int): String
++ cardToLinesArray(): String[]
++ suitToColor(): String
 -----------------------------------------
 */
 
 public class Card // don't forget to rename here and rename the file too!
 {
 	/***** STATIC VARIABLES *****/
+
+	// Color Codes
+	public static final String RESET  = "\u001B[0m";
+	public static final String BLACK  = "\u001B[30m";
+	public static final String RED    = "\u001B[31m";
+	public static final String GREEN  = "\u001B[32m";
+	public static final String YELLOW = "\u001B[33m";
+	public static final String BLUE   = "\u001B[34m";
+	public static final String PURPLE = "\u001B[35m";
+	public static final String CYAN   = "\u001B[36m";
+	public static final String WHITE  = "\u001B[37m";
+	public static final String ORANGE = "\u001B[38;2;255;165;0m";
 
 	/***** INSTANCE VARIABLES *****/
 	int number;
@@ -98,35 +133,81 @@ public class Card // don't forget to rename here and rename the file too!
 		this.isSelected = selected;
 	}
 
+	/**
+	 * Sets all the properties of the card
+	 * @param number int for number of the card
+	 * @param suit String for suit of the card
+	 * @param selected boolean for selection status of the card
+	 */
+	public void setAll(int number, String suit, boolean selected)
+	{
+		this.number = number;
+		this.suit = suit;
+		this.isSelected = selected;
+	}
+
 	/***** OTHER REQUIRED METHODS *****/
 
 	/** 
 	 * Returns a string representation of the card
 	 * @return a string representation of the card
 	 */
+	@Override
 	public String toString()
 	{
+		String cardString = this.suitToColor();
+		for (int line = 0; line < 7; line++)
+		{
+			cardString += cardToLines(line) + "\n";
+		}
+		cardString += RESET; // Reset color at the end of the card string
+		return cardString;
+	}
+
+	/**
+	 * Checks if two cards are equal
+	 * @param other
+	 * @return true if the cards are equal, false otherwise
+	 */
+	public boolean equals(Card other)
+	{
+		return (this.number == other.number && this.suit.equals(other.suit) && this.isSelected == other.isSelected);
+	}
+	/***** HELPER METHODS *****/
+
+	public String cardToLines(int line)
+	{
+		// Varuables needed for card construction
 		String numberSymbol;
+		String suitSymbol;
+		String color;
+		String specialSymbol;
+
 		switch (this.number) 
 		{
 			case 1:
 				numberSymbol = "A";
+				specialSymbol = ""; // No special symbol for Ace
 				break;
 			case 11:
 				numberSymbol = "J";
+				specialSymbol = "🎭";
 				break;
 			case 12:
 				numberSymbol = "Q";
+				specialSymbol = "👸";
 				break;
 			case 13:
 				numberSymbol = "K";
+				specialSymbol = "🤴";
 				break;
 			default:
 				numberSymbol = String.valueOf(this.number);
+				specialSymbol = ""; // No special symbol for numbers 2-10
 				break;
-        }
+		}
 
-		String suitSymbol;
+		
 		if (this.suit.equalsIgnoreCase("Spades"))
 		{
 			suitSymbol = "♠";
@@ -148,28 +229,65 @@ public class Card // don't forget to rename here and rename the file too!
 			suitSymbol = "?"; // Unknown suit
 		}
 
-		String cardString;
-		cardString = String.format("┌─────────┐%n");
-		cardString += String.format("│%s%8s│%n", numberSymbol, "");
-		cardString += String.format("│%9s│%n", "");
-		cardString += String.format("│%5s%4s│%n", suitSymbol,  "");
-		cardString += String.format("│%9s│%n", "");
-		cardString += String.format("│%9s%s│%n", numberSymbol, "");
-		cardString += String.format("└─────────┘%n");
+		color = this.suitToColor();
 
 
+		String cardString = "";
+		switch (line) {
+			case 0:
+				cardString = String.format("┌─────────┐");
+				break;
+			case 1:
+				cardString = String.format("│%s%8s│", numberSymbol, "");
+				break;
+			case 2:
+				cardString = String.format("│%9s│", "");
+				break;
+			case 3:
+				cardString = String.format("│%5s%4s│", suitSymbol,  "");
+				break;
+			case 4:
+				cardString = String.format("│%9s│", "");
+				break;
+			case 5:
+				cardString = String.format("│%s%9s│", "", numberSymbol);
+				break;
+			case 6:
+				cardString = String.format("└─────────┘");
+				break;
+		}
 		return cardString;
 	}
 
-	/**
-	 * Checks if two cards are equal
-	 * @param other
-	 * @return true if the cards are equal, false otherwise
-	 */
-	public boolean equals(Card other)
+	public String[] cardToLinesArray()
 	{
-		return (this.number == other.number && this.suit.equals(other.suit) && this.isSelected == other.isSelected);
+		String[] cardLines = new String[7];
+		for (int i = 0; i < 7; i++)
+		{
+			cardLines[i] = cardToLines(i);
+		}
+		return cardLines;
 	}
-	/***** HELPER METHODS *****/
+
+	public String suitToColor()
+	{
+		if (this.suit.equalsIgnoreCase("Hearts"))
+		{
+			return RED;
+		}
+		else if (this.suit.equalsIgnoreCase("Diamonds"))
+		{
+			return ORANGE;
+		}
+		else if (this.suit.equalsIgnoreCase("Spades"))
+		{
+			return RESET; //Black doesn't show up on the console so we keep it defualt
+		}
+		else // Clubs
+		{
+			return BLUE;
+		}
+	}
+
 
 }

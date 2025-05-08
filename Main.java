@@ -41,8 +41,27 @@ public class Main
     /***** PROCESSING SECTION *****/
 
     /***** OUTPUT SECTION *****/
-    Card cardString = new Card(1, "Spades", false);
+    Card cardString = new Card(13, "Spades", false);
     System.out.println(cardString.toString());
+
+    cardString.setSuit("Hearts");
+    System.out.println(cardString.toString());
+
+    cardString.setSuit("Clubs");
+    System.out.println(cardString.toString());
+
+    cardString.setSuit("Diamonds");
+    System.out.println(cardString.toString());
+
+    GameBoard board = new GameBoard();
+    board.intializeBoard();
+    board.stampBoard(cardString.cardToLinesArray(), 5, 3, cardString.suitToColor());
+    board.printBoard();
+
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("📃");
+    System.out.println(sb.toString());
   }
   /***** STATIC METHODS *****/
 }
