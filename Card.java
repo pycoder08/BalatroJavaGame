@@ -238,7 +238,14 @@ public class Card // don't forget to rename here and rename the file too!
 				cardString = String.format("┌─────────┐");
 				break;
 			case 1:
-				cardString = String.format("│%s%8s│", numberSymbol, "");
+				if (numberSymbol.equals("10"))
+				{
+					cardString = String.format("│%s%7s│", numberSymbol, "");
+				}
+				else
+				{
+					cardString = String.format("│%s%8s│", numberSymbol, "");
+				}
 				break;
 			case 2:
 				cardString = String.format("│%9s│", "");

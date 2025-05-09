@@ -54,8 +54,10 @@ public class Main
     System.out.println(cardString.toString());
 
     GameBoard board = new GameBoard();
-    board.intializeBoard();
+    board.initializeBoard();
+    board.shuffleDeck();
     board.dealHand();
+    board.printHand();
     //board.stampBoard(cardString.cardToLinesArray(), 21, 32, cardString.suitToColor());
     board.printBoard();
 
