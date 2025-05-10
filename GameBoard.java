@@ -367,7 +367,7 @@ public class GameBoard
 				}
 				else if (hand[i] != null && hand[i].getSelected())
 				{
-					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), "\u001B[0m"); // Reset color for selected cards
+					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), hand[i].suitToColor()); // Reset color for selected cards
 				}
 			}
 		}
@@ -441,7 +441,7 @@ public class GameBoard
 				for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) // For each suit in the suits array
 				{
 					int nextSuitIndex = 0;
-					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1) // While there are upcoming cards of the suit in the hand
+					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1 && currentSuitIndex < hand.length - 1) // While there are upcoming cards of the suit in the hand and we haven't reached the end of the hand
 					{
 						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, suits[suitIndex]); // Get the index of the next card of the proper suit
 						if (hand[currentSuitIndex] != null && !hand[currentSuitIndex].getSuit().equalsIgnoreCase(suits[suitIndex])) // If the suit of the card is not the right suit and isn't null
@@ -460,6 +460,10 @@ public class GameBoard
 								eraseCard(hand, nextSuitIndex); // Erase the card if it is selected
 							}
 							initializeBoard(); // Reinitialize the board to fix the hand box
+						}
+						else
+						{
+							currentSuitIndex++;
 						}
 					}
 				}
