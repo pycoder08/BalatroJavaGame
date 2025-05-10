@@ -41,29 +41,21 @@ public class Main
     /***** PROCESSING SECTION *****/
 
     /***** OUTPUT SECTION *****/
-    Card cardString = new Card(13, "Spades", false);
-    System.out.println(cardString.toString());
-
-    cardString.setSuit("Hearts");
-    System.out.println(cardString.toString());
-
-    cardString.setSuit("Clubs");
-    System.out.println(cardString.toString());
-
-    cardString.setSuit("Diamonds");
-    System.out.println(cardString.toString());
 
     GameBoard board = new GameBoard();
     board.initializeBoard();
     board.shuffleDeck();
     board.dealHand();
+    board.selectCard(0);
     board.printHand();
-    //board.stampBoard(cardString.cardToLinesArray(), 21, 32, cardString.suitToColor());
+    board.printBoard();
+    board.sortHand(1);
+    board.printHand();
     board.printBoard();
 
 
-    StringBuilder sb = new StringBuilder();
-    System.out.println(sb.toString());
+
+  
   }
   /***** STATIC METHODS *****/
 }

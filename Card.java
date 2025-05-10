@@ -22,14 +22,20 @@ Card
 - number: int
 - suit: String
 - isSelected: boolean
+- rowCoord: int
+- colCoord: int
 -----------------------------------------
 + GetNumber(): int
 + getSuit(): String
 + getSelected(): boolean
++ getRowCoord(): int
++ getColCoord(): int
 + setNumber(number: int): void
 + setSuit(suit: String): void
 + setSelected(selected: boolean): void
-+ setAll(number: int, suit: String, selected: boolean): void
++ setRowCoord(row: int): void
++ setColCoord(col: int): void
++ setAll(number: int, suit: String, selected: boolean, row: int, col: int): void
 + toString(): String
 + equals(other: Card): boolean
 + cardToLines(line: int): String
@@ -58,6 +64,9 @@ public class Card // don't forget to rename here and rename the file too!
 	int number;
 	String suit;
 	boolean isSelected;
+	// Coordiantes of the card on the game baord
+	int rowCoord;
+	int colCoord;
 	/***** CONSTRUCTORS *****/
 	/** Description: Default constructor that creates an ace of spades and is not selected */
 	public Card()
@@ -65,14 +74,18 @@ public class Card // don't forget to rename here and rename the file too!
 		number = 1; // Ace
 		suit = "Spades";
 		isSelected = false;
+		rowCoord = 0;
+		colCoord = 0;
 	}
 
 	/** Description: Constructor that creates a card with the given number, suit, and selection status */
-	public Card(int number, String suit, boolean selectedChoice)
+	public Card(int number, String suit, boolean selectedChoice, int row, int col)
 	{
 		this.number = number;
 		this.suit = suit;
-		isSelected = selectedChoice;
+		this.isSelected = selectedChoice;
+		this.rowCoord = row;
+		this.colCoord = col;
 	}
 
 	/** 
@@ -84,6 +97,8 @@ public class Card // don't forget to rename here and rename the file too!
 		this.number = other.number;
 		this.suit = other.suit;
 		this.isSelected = other.isSelected;
+		this.rowCoord = other.rowCoord;
+		this.colCoord = other.colCoord;
 	}
 
 
@@ -92,7 +107,7 @@ public class Card // don't forget to rename here and rename the file too!
 	 * Returns the number of the card 
 	 * @return the card's number
 	 * */
-	public int GetNumber()
+	public int getNumber()
 	{
 		return this.number;
 	}
@@ -104,6 +119,33 @@ public class Card // don't forget to rename here and rename the file too!
 	public String getSuit()
 	{
 		return this.suit;
+	}
+
+	/** 
+	 * Returns the selection status of the card 
+	 * @return the selection status of the card
+	 * */
+	public boolean getSelected()
+	{
+		return this.isSelected;
+	}
+
+	/** 
+	 * Returns the row coordinate of the card 
+	 * @return the row coordinate of the card
+	 * */
+	public int getRowCoord()
+	{
+		return this.rowCoord;
+	}
+
+	/** 
+	 * Returns the column coordinate of the card 
+	 * @return the column coordinate of the card
+	 * */
+	public int getColCoord()
+	{
+		return this.colCoord;
 	}
 	/***** MUTATORS *****/
 	/** 
@@ -134,13 +176,35 @@ public class Card // don't forget to rename here and rename the file too!
 	}
 
 	/**
+	 * Sets the row coordinate of the card
+	 * @param row the row coordinate of the card
+	 */
+	public void setRowCoord(int row)
+	{
+		this.rowCoord = row;
+	}
+
+	/**
+	 * Sets the column coordinate of the card
+	 * @param col the column coordinate of the card
+	 */
+	public void setColCoord(int col)
+	{
+		this.colCoord = col;
+	}
+
+	/**
 	 * Sets all the properties of the card
 	 * @param number int for number of the card
 	 * @param suit String for suit of the card
 	 * @param selected boolean for selection status of the card
+	 * @param row int for row coordinate of the card
+	 * @param col int for column coordinate of the card
 	 */
-	public void setAll(int number, String suit, boolean selected)
+	public void setAll(int number, String suit, boolean selected, int row, int col)
 	{
+		this.rowCoord = row;
+		this.colCoord = col;
 		this.number = number;
 		this.suit = suit;
 		this.isSelected = selected;
@@ -155,6 +219,7 @@ public class Card // don't forget to rename here and rename the file too!
 	@Override
 	public String toString()
 	{
+		System.out.println("Card: " + this.number + " of " + this.suit + " isSelected: " + this.isSelected + " at (" + this.rowCoord + ", " + this.colCoord + ")");
 		String cardString = this.suitToColor();
 		for (int line = 0; line < 7; line++)
 		{

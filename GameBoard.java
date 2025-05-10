@@ -44,12 +44,18 @@ public class GameBoard
 	
 	/***** CONSTANTS  *****/
 	private static final int ROWS = 40;
-	private static final int COLS = 160;
-	private static final int HAND_COL = 35;
-	private static final int HAND_ROW = 25;
+	private static final int COLS = 140;
+	private static final int HAND_COL = 30;
+	private static final int HAND_ROW = 27;
 	private static final int CARD_COL = HAND_COL + 2;
 	private static final int CARD_ROW = HAND_ROW + 1;
 	private static final int HAND_CELL_WIDTH = 14;
+
+	// Empty card stamp to erase cards from the board
+	private static final String[] EMPTY_CARD = new String[5];
+	{
+		EMPTY_CARD[0] = EMPTY_CARD[1] = EMPTY_CARD[2] = EMPTY_CARD[3] = EMPTY_CARD[4] = "           ";
+	}
 
 	/***** STATIC VARIABLES *****/
 	// Arrays for the board, colors, and deck
@@ -60,19 +66,19 @@ public class GameBoard
 	{
 		for (int i = 0; i < 13; i++)
 		{
-			deck[i] = new Card(i + 1, "Spades", false);
+			deck[i] = new Card(i + 1, "Spades", false, 0, 0); 
 		}
 		for (int i = 13; i < 26; i++)
 		{
-			deck[i] = new Card(i - 12, "Hearts", false);
+			deck[i] = new Card(i - 12, "Hearts", false, 0, 0);
 		}
 		for (int i = 26; i < 39; i++)
 		{
-			deck[i] = new Card(i - 25, "Diamonds", false);
+			deck[i] = new Card(i - 25, "Diamonds", false, 0, 0);
 		}
 		for (int i = 39; i < 52; i++)
 		{
-			deck[i] = new Card(i - 38, "Clubs", false);
+			deck[i] = new Card(i - 38, "Clubs", false, 0, 0);
 		}
 	}
 
@@ -186,6 +192,13 @@ public class GameBoard
 		}
 		printBox(0,0, ROWS, COLS); // Draw the outer border of the board
 		printHorizBoxes(HAND_ROW, HAND_COL, 9, HAND_CELL_WIDTH, 7); // Draw the hand box
+
+		// Print number labels
+		for (int r = 0; r < 7; r++)
+		{
+			board[HAND_ROW + 9][HAND_COL + 7 + r * HAND_CELL_WIDTH] = "" + (r+1);
+		}
+
 	}
 
 	/**
@@ -333,6 +346,8 @@ public class GameBoard
 				if (deck[j] != null && dealtCards < 7 && hand[j] == null)
 				{
 					hand[dealtCards] = deck[j]; // Add the card to the hand
+					hand[dealtCards].setRowCoord(CARD_ROW); // Set the row coordinate of the card
+					hand[dealtCards].setColCoord(CARD_COL + (dealtCards * HAND_CELL_WIDTH)); // Set the column coordinate of the card
 					deck[j] = null; // Remove the card from the deck
 					dealtCards++;
 				}
@@ -340,16 +355,33 @@ public class GameBoard
 		}
 
 		/**
-		 * Prints the player's hand of cards on the game board.
+		 * Prints an array of cards to the board
 		 */
-		public void printHand()
+		public void printCards(Card[] cardArray)
 		{
 			for (int i = 0; i < hand.length; i++)
 			{
-				if (hand[i] != null)
+				if (hand[i] != null && !hand[i].getSelected())
 				{
-					stampBoard(hand[i].cardToLinesArray(), CARD_ROW, CARD_COL + (i * HAND_CELL_WIDTH), hand[i].suitToColor());
+					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), hand[i].suitToColor());
 				}
+				else if (hand[i] != null && hand[i].getSelected())
+				{
+					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), "\u001B[0m"); // Reset color for selected cards
+				}
+			}
+		}
+
+		public void printHand()
+		{
+			printCards(hand);
+		}
+
+		public void eraseCard(Card[] cardArray, int cardIndex)
+		{
+			if (cardArray[cardIndex] != null)
+			{
+				stampBoard(EMPTY_CARD, hand[cardIndex].getRowCoord(), hand[cardIndex].getColCoord(), "\u001B[0m"); // Reset color for erased cards
 			}
 		}
 
@@ -363,10 +395,122 @@ public class GameBoard
 				int randomIndex = java.util.concurrent.ThreadLocalRandom.current().nextInt(0, 52); // Generate a random index between 0 and 51
 				
 				// Swap the current card with a random one
-				Card temp = deck[i];
-				deck[i] = deck[randomIndex];
-				deck[randomIndex] = temp;
+				swapIndeces(deck, i, randomIndex);
 			}
+		}
+
+		/**
+		 * Selects a card from the hand by toggling its selection status.
+		 * @param cardIndex The index of the card to be selected.
+		 */
+		public void selectCard(int cardIndex)
+		{
+			if (hand[cardIndex] != null)
+			{
+				hand[cardIndex].setSelected(!hand[cardIndex].getSelected()); // Toggle the selection status of the card to be the opposite of what it is now
+				hand[cardIndex].setRowCoord(CARD_ROW - 2); // Set the row coordinate of the card to be above the hand
+			}
+		}
+
+		public void sortHand(int sortKind)
+		{
+			String[] suits = {"Spades", "Hearts", "Diamonds", "Clubs"}; // Array of suits to be used for sorting
+
+			if (sortKind == 0) // Sort by number
+			{
+				// We loop through the hand array, swapping each card with the smallest subsequent card using the indexOfMin method
+				for (int index = 0; index < hand.length; index++)
+				{
+					int minIndex = indexOfMin(hand, index); // Get the index of the minimum card from the current index to the end of the array
+					swapIndeces(hand, index, minIndex);
+					if (hand[index].getSelected())
+					{
+						eraseCard(hand, index); // Erase the card if it is selected
+					}
+					if (hand[minIndex].getSelected())
+					{
+						eraseCard(hand, minIndex); // Erase the card if it is selected
+					}
+					initializeBoard(); // Reinitialize the board to fix the hand box
+				}
+			}
+			else if (sortKind == 1) // Sort by suit
+			{
+				int currentSuitIndex = 0;
+
+				for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) // For each suit in the suits array
+				{
+					int nextSuitIndex = 0;
+					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1) // While there are upcoming cards of the suit in the hand
+					{
+						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, suits[suitIndex]); // Get the index of the next card of the proper suit
+						if (hand[currentSuitIndex] != null && !hand[currentSuitIndex].getSuit().equalsIgnoreCase(suits[suitIndex])) // If the suit of the card is not the right suit and isn't null
+						{
+							System.out.println(hand[currentSuitIndex].getSuit());
+							System.out.println(suits[suitIndex]);
+
+							swapIndeces(hand, currentSuitIndex, nextSuitIndex);
+							currentSuitIndex++; // Update the current suit index to be the next card
+							if (hand[currentSuitIndex].getSelected())
+							{
+								eraseCard(hand, currentSuitIndex); // Erase the card if it is selected
+							}
+							if (hand[nextSuitIndex].getSelected())
+							{
+								eraseCard(hand, nextSuitIndex); // Erase the card if it is selected
+							}
+							initializeBoard(); // Reinitialize the board to fix the hand box
+						}
+					}
+				}
+			}
+
+		}
+
+		public static void swapIndeces(Card[] array, int a, int b)
+		{
+			//We store one element in a temporary variable to avoid it being overwritten
+			Card storedElement = new Card(array[a]); //array[a];
+			int aColCoord = array[a].getColCoord(); //Store the column coordinate of the first card
+			int bColCoord = array[b].getColCoord(); //Store the column coordinate of the second card
+
+			array[a] = new Card(array[b]);
+			array[a].setColCoord(aColCoord); //Set the column coordinate of the first card to be the same as it was before
+			array[b] = new Card(storedElement);
+			array[b].setColCoord(bColCoord); //Set the column coordinate of the second card to be the same as it was before
+		}
+
+		public static int indexOfMin(Card[] array, int startIndex)
+		{
+			// We set the current minimum and index of that minimum to be the starting element and index
+			Card currentMin = new Card(array[startIndex]); //Copy constructor to avoid modifying the original card
+			int minIndex = startIndex; 
+
+			// We loop through, updating the current minimum and index if we find a smaller element
+			for (int index = startIndex; index < array.length; index++)
+			{
+				if (array[index].getNumber() < currentMin.getNumber())
+				{
+					currentMin = array[index];
+					minIndex = index;
+				}
+			}
+			return minIndex;
+		}
+
+		public static int indexOfSuit(Card[] array, int startIndex, String suit)
+		{
+			Card currentMin = new Card(array[startIndex]); //Copy constructor to avoid modifying the original card
+			int minIndex = startIndex;
+			for (int index = startIndex; index < array.length; index++)
+			{
+				if (array[index].getSuit().equalsIgnoreCase(suit))
+				{
+					currentMin = array[index];
+					return index; // Return the index of the first card of the suit
+				}
+			}
+			return -1; // Return -1 if no card of the suit is found
 		}
 
 }
