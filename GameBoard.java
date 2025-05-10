@@ -51,6 +51,17 @@ public class GameBoard
 	private static final int CARD_ROW = HAND_ROW + 1;
 	private static final int HAND_CELL_WIDTH = 14;
 
+	public static final String RESET  = "\u001B[0m";
+	public static final String BLACK  = "\u001B[30m";
+	public static final String RED    = "\u001B[31m";
+	public static final String GREEN  = "\u001B[32m";
+	public static final String YELLOW = "\u001B[33m";
+	public static final String BLUE   = "\u001B[34m";
+	public static final String PURPLE = "\u001B[35m";
+	public static final String CYAN   = "\u001B[36m";
+	public static final String WHITE  = "\u001B[37m";
+	public static final String ORANGE = "\u001B[38;2;255;165;0m";
+
 	// Empty card stamp to erase cards from the board
 	private static final String[] EMPTY_CARD = new String[5];
 	{
@@ -190,7 +201,7 @@ public class GameBoard
 				board[r][c] = " ";
 			}
 		}
-		printBox(0,0, ROWS, COLS); // Draw the outer border of the board
+		printBox(0,0, ROWS, COLS, WHITE); // Draw the outer border of the board
 		printHorizBoxes(HAND_ROW, HAND_COL, 9, HAND_CELL_WIDTH, 7); // Draw the hand box
 
 		// Print number labels
@@ -249,36 +260,45 @@ public class GameBoard
 
 	/**
 	 * Prints a box on the game board with the specified dimensions and starting coordinate.
-	 * @param row The starting row for the box
-	 * @param col The starting column for the box
-	 * @param height The height of the box
-	 * @param width The width of the box
+	 * @param row The integer starting row for the box
+	 * @param col The integer starting column for the box
+	 * @param height The integer height of the box
+	 * @param width The integer width of the box
+	 * @param color The string for the color to be applied to the box
 	 */
-	public void printBox(int row, int col, int height, int width)
+	public void printBox(int row, int col, int height, int width, String color)
 	{
-		// Add the corner symbols
-		board[row][col] = "┌";
-		board[row][col + width - 1] = "┐";
-		board[row + height - 1][col] = "└";
-		board[row + height - 1][col + width - 1] = "┘";
+		String[] boxArray = new String[height];
 
-		// Add the borders using loops
-		for (int c = col + 1; c < col + width - 1; c++)
+		// Add the corner symbol to the first row
+		boxArray[0] = "┌";
+
+		// Add the top border to the first row
+		for (int c = 0; c < width - 2; c++)
 		{
-			board[row][c] = "─";
+			boxArray[0] += "─";
 		}
-		for (int c = col + 1; c < col + width - 1; c++)
+		boxArray[0] += "┐"; // Cap off the first row with a corner
+
+		for (int r = 1; r < height - 1; r++) // Corrected loop condition to include the last row before the bottom border
 		{
-			board[row + height - 1][c] = "─";
+			boxArray[r] = "│";
+			for (int blank = 1; blank < width - 1; blank++) // fill the row with spaces
+			{
+				boxArray[r] += " ";
+			}
+			boxArray[r] += "│";
 		}
-		for (int r = row + 1; r < row + height - 1; r++)
+
+		// Add the bottom border to the last row
+		boxArray[height - 1] = "└";
+		for (int c = 0; c < width - 2; c++)
 		{
-			board[r][col] = "│";
+			boxArray[height - 1] += "─";
 		}
-		for (int r = row + 1; r < row + height - 1; r++)
-		{
-			board[r][col + width - 1] = "│";
-		}
+		boxArray[height - 1] += "┘"; // Cap off the last row with a corner
+
+		stampBoard(boxArray, row, col, color); // Stamp the box on the board
 	}
 
 	/**
@@ -292,7 +312,16 @@ public class GameBoard
 	public void printHorizBoxes(int row, int col, int height, int cellWidth, int cells)
 	{
 
-		int totalWidth = cellWidth * cells;
+		printBox(row, col, height, cellWidth+1, WHITE); // Print the first box outside the loop
+		//Print the rest of the boxes and fix the corners between boxes
+		for (int c = 1; c < cells; c++)
+		{
+			printBox(row, col + c * cellWidth, height, cellWidth+1, WHITE);
+			board[row][col + c * cellWidth] = "┬"; // Replace corner
+			board[row + height - 1][col + c * cellWidth] = "┴"; // Replace corner
+		}
+
+		/*int totalWidth = cellWidth * cells;
 
 			// 1) Top border
 			board[row][col] = "┌";
@@ -332,7 +361,7 @@ public class GameBoard
 					board[bot][col + x] = "─";
 				}
 			}
-			board[bot][col + totalWidth] = "┘";
+			board[bot][col + totalWidth] = "┘";*/
 		}
 
 		/**
@@ -367,7 +396,7 @@ public class GameBoard
 				}
 				else if (hand[i] != null && hand[i].getSelected())
 				{
-					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), "\u001B[0m"); // Reset color for selected cards
+					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), hand[i].suitToColor()); // Reset color for selected cards
 				}
 			}
 		}
@@ -441,7 +470,7 @@ public class GameBoard
 				for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) // For each suit in the suits array
 				{
 					int nextSuitIndex = 0;
-					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1) // While there are upcoming cards of the suit in the hand
+					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1 && currentSuitIndex < hand.length - 1) // While there are upcoming cards of the suit in the hand and we haven't reached the end of the hand
 					{
 						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, suits[suitIndex]); // Get the index of the next card of the proper suit
 						if (hand[currentSuitIndex] != null && !hand[currentSuitIndex].getSuit().equalsIgnoreCase(suits[suitIndex])) // If the suit of the card is not the right suit and isn't null
@@ -460,6 +489,10 @@ public class GameBoard
 								eraseCard(hand, nextSuitIndex); // Erase the card if it is selected
 							}
 							initializeBoard(); // Reinitialize the board to fix the hand box
+						}
+						else
+						{
+							currentSuitIndex++;
 						}
 					}
 				}
