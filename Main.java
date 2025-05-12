@@ -28,12 +28,12 @@ public class Main
 
   /***** CONSTANT SECTION *****/
 
-  public static void main(String[] args)
+  public static void main(String[] args) throws InterruptedException
   {
     /***** DECLARATION SECTION *****/
 
     /***** INITIALIZATION SECTION *****/
-
+    
     /***** INTRO SECTION *****/
 
     /***** INPUT SECTION *****/
@@ -41,18 +41,9 @@ public class Main
     /***** PROCESSING SECTION *****/
 
     /***** OUTPUT SECTION *****/
-
+    
     GameBoard board = new GameBoard();
-    board.initializeBoard();
-    board.shuffleDeck();
-    board.dealHand();
-    board.selectCard(0);
-    board.printHand();
-    board.printBoard();
-    board.sortHand(1);
-    board.printHand();
-    board.printBoard();
-
+    board.playGame();
 
 
   

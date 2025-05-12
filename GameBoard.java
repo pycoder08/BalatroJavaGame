@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 /**
  * Represents The game board
  * 
@@ -63,9 +65,9 @@ public class GameBoard
 	public static final String ORANGE = "\u001B[38;2;255;165;0m";
 
 	// Empty card stamp to erase cards from the board
-	private static final String[] EMPTY_CARD = new String[5];
+	private static final String[] EMPTY_CARD = new String[7];
 	{
-		EMPTY_CARD[0] = EMPTY_CARD[1] = EMPTY_CARD[2] = EMPTY_CARD[3] = EMPTY_CARD[4] = "           ";
+		EMPTY_CARD[0] = EMPTY_CARD[1] = EMPTY_CARD[2] = EMPTY_CARD[3] = EMPTY_CARD[4] = EMPTY_CARD[5] = EMPTY_CARD[6] = "           ";
 	}
 
 	/***** STATIC VARIABLES *****/
@@ -73,6 +75,7 @@ public class GameBoard
 	static String[][] board = new String[ROWS][COLS];
 	static String[][] colors = new String[ROWS][COLS]; // Stores the color of each cell to be applied when printing
 	static Card[] deck = new Card[52];
+	static Card[] selectedCards = new Card[5]; // Array to hold selected cards
 	// Fill the deck with cards
 	{
 		for (int i = 0; i < 13; i++)
@@ -202,7 +205,7 @@ public class GameBoard
 			}
 		}
 		printBox(0,0, ROWS, COLS, WHITE); // Draw the outer border of the board
-		printHorizBoxes(HAND_ROW, HAND_COL, 9, HAND_CELL_WIDTH, 7); // Draw the hand box
+		printHandGrid(); // Draw the hand box
 
 		// Print number labels
 		for (int r = 0; r < 7; r++)
@@ -320,48 +323,6 @@ public class GameBoard
 			board[row][col + c * cellWidth] = "┬"; // Replace corner
 			board[row + height - 1][col + c * cellWidth] = "┴"; // Replace corner
 		}
-
-		/*int totalWidth = cellWidth * cells;
-
-			// 1) Top border
-			board[row][col] = "┌";
-			for (int x = 1; x < totalWidth; x++) 
-			{
-				if (x % cellWidth == 0) 
-				{
-					board[row][col + x] = "┬";       //Three-way connector for the top of the cell
-				} else {
-					board[row][col + x] = "─";
-				}
-			}
-			board[row][col + totalWidth] = "┐";
-		
-			// 2) Middle rows
-			for (int y = 1; y < height - 1; y++) 
-			{
-				int r = row + y;
-				board[r][col] = "│";                 // left wall
-				board[r][col + totalWidth] = "│";    // right wall
-				// draw interior verticals
-				for (int x = cellWidth; x < totalWidth; x += cellWidth) 
-				{
-					board[r][col + x] = "│";
-				}
-			}
-		
-			// 3) Bottom border
-			int bot = row + height - 1;
-			board[bot][col] = "└";
-			for (int x = 1; x < totalWidth; x++) 
-			{
-				if (x % cellWidth == 0) 
-				{
-					board[bot][col + x] = "┴"; //Three-way connector for the bottom of the cell
-				} else {
-					board[bot][col + x] = "─";
-				}
-			}
-			board[bot][col + totalWidth] = "┘";*/
 		}
 
 		/**
@@ -384,6 +345,14 @@ public class GameBoard
 		}
 
 		/**
+		 * Prints the hand grid on the game board.
+		 */
+		public void printHandGrid()
+		{
+			printHorizBoxes(HAND_ROW, HAND_COL, 9, HAND_CELL_WIDTH, 7); // Draw the hand box
+		}
+
+		/**
 		 * Prints an array of cards to the board
 		 */
 		public void printCards(Card[] cardArray)
@@ -398,14 +367,26 @@ public class GameBoard
 				{
 					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), hand[i].suitToColor()); // Reset color for selected cards
 				}
+				else if (hand[i] == null)
+				{
+					stampBoard(EMPTY_CARD, CARD_ROW, hand[i-1].getColCoord() + HAND_CELL_WIDTH, "\u001B[0m"); // print empty cards
+				}
 			}
 		}
 
+		/**
+		 * Prints the player's hand of cards to the board.
+		 */
 		public void printHand()
 		{
 			printCards(hand);
 		}
 
+		/**
+		 * Erases a card from the hand by stamping an empty card at its position.
+		 * @param cardArray The array of cards to erase from.
+		 * @param cardIndex The index of the card to be erased.
+		 */
 		public void eraseCard(Card[] cardArray, int cardIndex)
 		{
 			if (cardArray[cardIndex] != null)
@@ -434,13 +415,44 @@ public class GameBoard
 		 */
 		public void selectCard(int cardIndex)
 		{
-			if (hand[cardIndex] != null)
+			if (hand[cardIndex] != null && !hand[cardIndex].getSelected())
 			{
-				hand[cardIndex].setSelected(!hand[cardIndex].getSelected()); // Toggle the selection status of the card to be the opposite of what it is now
+				hand[cardIndex].setSelected(true); // Toggle the selection status to be true
 				hand[cardIndex].setRowCoord(CARD_ROW - 2); // Set the row coordinate of the card to be above the hand
+			}
+			else if (hand[cardIndex] != null && hand[cardIndex].getSelected())
+			{
+				hand[cardIndex].setSelected(false); // Toggle the selection status to be false
+				hand[cardIndex].setRowCoord(CARD_ROW); // Set the row coordinate of the card back to the hand
+				printHandGrid(); // Reprtint the hand grid to fix the edge
 			}
 		}
 
+		public void discard()
+		{
+			
+			for (int i = 0; i < hand.length; i++) // For every card in the hand
+			{
+				if (hand[i].getSelected())
+				{
+					eraseCard(hand, i); // Erase the card from the board
+					hand[i] = null; // Discard the selected card
+				}
+			}
+			for (int card =0; card < selectedLength(); card++) // For every selected card
+			{
+				selectedCards[card] = null; // Remove the selected card from the selected cards array
+			}
+			printHandGrid(); // Reprint the hand grid to fix the edge
+			printHand(); // Print the hand
+			printBoard(); // Print the board
+			
+		}
+
+		/**
+		 * Sorts the hand of cards based on the specified sorting criteria.
+		 * @param sortKind The sorting criteria (0 for number, 1 for suit).
+		 */
 		public void sortHand(int sortKind)
 		{
 			String[] suits = {"Spades", "Hearts", "Diamonds", "Clubs"}; // Array of suits to be used for sorting
@@ -475,9 +487,6 @@ public class GameBoard
 						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, suits[suitIndex]); // Get the index of the next card of the proper suit
 						if (hand[currentSuitIndex] != null && !hand[currentSuitIndex].getSuit().equalsIgnoreCase(suits[suitIndex])) // If the suit of the card is not the right suit and isn't null
 						{
-							System.out.println(hand[currentSuitIndex].getSuit());
-							System.out.println(suits[suitIndex]);
-
 							swapIndeces(hand, currentSuitIndex, nextSuitIndex);
 							currentSuitIndex++; // Update the current suit index to be the next card
 							if (hand[currentSuitIndex].getSelected())
@@ -500,6 +509,12 @@ public class GameBoard
 
 		}
 
+		/**
+		 * Swaps two cards in the array at the specified indices.
+		 * @param array The array of cards to swap elements in.
+		 * @param a The index of the first card to swap.
+		 * @param b The index of the second card to swap.
+		 */
 		public static void swapIndeces(Card[] array, int a, int b)
 		{
 			//We store one element in a temporary variable to avoid it being overwritten
@@ -513,6 +528,12 @@ public class GameBoard
 			array[b].setColCoord(bColCoord); //Set the column coordinate of the second card to be the same as it was before
 		}
 
+		/**
+		 * Returns the index of the minimum card in the array starting from the given index.
+		 * @param array The array of cards to search in.
+		 * @param startIndex The index to start searching from.
+		 * @return The index of the minimum card, or -1 if not found.
+		 */
 		public static int indexOfMin(Card[] array, int startIndex)
 		{
 			// We set the current minimum and index of that minimum to be the starting element and index
@@ -531,6 +552,13 @@ public class GameBoard
 			return minIndex;
 		}
 
+		/**
+		 * Returns the index of the first card of the specified suit in the array starting from the given index.
+		 * @param array The array of cards to search in.
+		 * @param startIndex The index to start searching from.
+		 * @param suit The suit to search for.
+		 * @return The index of the first card of the specified suit, or -1 if not found.
+		 */
 		public static int indexOfSuit(Card[] array, int startIndex, String suit)
 		{
 			Card currentMin = new Card(array[startIndex]); //Copy constructor to avoid modifying the original card
@@ -544,6 +572,124 @@ public class GameBoard
 				}
 			}
 			return -1; // Return -1 if no card of the suit is found
+		}
+
+
+		/**
+		 * Appends a card to the selectedCards array.
+		 * @param cardArray The array to which the card will be appended.
+		 * @param card The card to be appended.
+		 */
+		public void appendCard(Card[] cardArray, Card card)
+		{
+			for (int i = 0; i < cardArray.length; i++)
+			{
+				if (cardArray[i] == null)
+				{
+					cardArray[i] = card; // Add the card to the first empty slot in the array
+					break;
+				}
+			}
+		}
+
+		/**
+		 * Returns the number of selected cards in the selectedCards array.
+		 * @return
+		 */
+		public int selectedLength()
+		{
+			int count = 0;
+			for (int i = 0; i < selectedCards.length; i++)
+			{
+				if (selectedCards[i] != null)
+				{
+					count++;
+				}
+			}
+			return count;
+		}
+
+		/**
+		 * Checks if the selected cards form a flush (all cards of the same suit).
+		 * @return true if the selected cards form a flush, false otherwise.
+		 */
+		public boolean checkForFlush()
+		{
+			if (selectedLength() == 5)
+			{
+				String suit = selectedCards[0].getSuit(); // Get the suit of the first card
+				for (int i = 1; i < selectedCards.length; i++)
+				{
+					if (!selectedCards[i].getSuit().equalsIgnoreCase(suit)) // If any card has a different suit
+					{
+						return false; // Not a flush
+					}
+				}
+				return true; // All cards have the same suit, it's a flush
+			}
+			return false;
+		}
+
+
+		/**
+		 * Main method to play the game.
+		 * @throws InterruptedException
+		 */
+		public void playGame() throws InterruptedException
+		{
+			boolean contGame = true;
+			
+			
+			Scanner scanner = new Scanner(System.in);
+			this.initializeBoard();
+			this.shuffleDeck(); // Shuffle the deck
+			this.printBoard();
+			Thread.sleep(1000); // Sleep for 1 second
+			this.dealHand(); // Deal the hand
+			this.printHand(); // Print the hand
+			this.printBoard();
+			while (contGame)
+			{
+				char input = scanner.nextLine().charAt(0);
+				switch (input) 
+				{
+					case '1':
+					case '2':
+					case '3':
+					case '4':
+					case '5':
+					case '6':
+					case '7':
+						int cardIndex = input - '0' - 1; // Convert the character to an index
+						this.eraseCard(hand, cardIndex); // Erase the card from the hand
+						this.selectCard(cardIndex); // Select the card at the index
+						this.appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
+						this.printHand(); // Print the hand
+						this.printBoard();
+						System.out.println(checkForFlush());
+						break;
+					case 's':
+						this.sortHand(1); // Sort the hand by suit
+						this.printHand(); // Print the hand
+						this.printBoard();
+						break;
+					case 'n':
+						this.sortHand(0); // Sort the hand by number
+						this.printHand(); // Print the hand
+						this.printBoard();
+						break;
+					case 'q':
+						contGame = false; // Quit the game
+						break;
+					case 'd':
+						this.discard(); // Discard the selected cards
+						this.printHand(); // Print the hand
+						this.printBoard();
+						break;
+					default:
+						break;
+				}
+			}
 		}
 
 }
