@@ -257,9 +257,9 @@ public class GameBoard
 				sb.append(board[r][c]);
 				sb.append("\u001B[0m"); // Reset color after each character
 			}
-			System.out.println(sb.toString());
-			sb.setLength(0); // Clear the StringBuilder for the next row
+			sb.append("\n"); // Add a new line after every line
 		}
+		System.out.println(sb.toString()); // Print entire board in one go to avoid flickering
 	}
 
 	/**
@@ -655,6 +655,7 @@ public class GameBoard
 			{
 				// We read if the initial string is empty before going any further
 				String stringInput = scanner.nextLine();
+				System.out.print("\u001B[2K" + "\u001B[1A"); // Clear the line and move the cursor up to reduce flickering in the board output
 				if (stringInput.isEmpty())
 				{
 					System.out.println("Please enter a valid input");
@@ -677,8 +678,8 @@ public class GameBoard
 							this.selectCard(cardIndex); // Select the card at the index
 							this.appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
 							this.printHand(); // Print the hand
+							//Thread.sleep(200);
 							this.printBoard(); // Display the board
-							System.out.println(checkForFlush());
 							break;
 						case 's':
 							this.sortHand(1); // Sort the hand by suit
