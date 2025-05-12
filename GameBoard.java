@@ -633,6 +633,27 @@ public class GameBoard
 			return false;
 		}
 
+		public boolean checkForStraight()
+		{
+			boolean straightCheck = true;
+			for (int num = 1; num < 6; num++)
+			{
+				for (int card = 0; card < selectedLength(); card++) // Loop through every seleced card until we find a card of the right number, then break if we find it
+				{
+					if (selectedCards[card] != null && selectedCards[card].getNumber() == num)
+					{
+						straightCheck = true;
+						break;
+					}
+					else
+					{
+						straightCheck = false;
+					}
+				}
+			}
+			return (straightCheck);
+		}
+
 
 		/**
 		 * Main method to play the game.
@@ -677,9 +698,11 @@ public class GameBoard
 							this.eraseCard(hand, cardIndex); // Erase the card from the hand
 							this.selectCard(cardIndex); // Select the card at the index
 							this.appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
+							this.checkForStraight();
 							this.printHand(); // Print the hand
 							//Thread.sleep(200);
 							this.printBoard(); // Display the board
+							System.out.println(this.checkForStraight());
 							break;
 						case 's':
 							this.sortHand(1); // Sort the hand by suit
