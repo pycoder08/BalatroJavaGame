@@ -76,6 +76,7 @@ public class GameBoard
 	static String[][] colors = new String[ROWS][COLS]; // Stores the color of each cell to be applied when printing
 	static Card[] deck = new Card[52];
 	static Card[] selectedCards = new Card[5]; // Array to hold selected cards
+	static int dealtCards = 0; // Int to keep track of dealt cards
 	// Fill the deck with cards
 	{
 		for (int i = 0; i < 13; i++)
@@ -330,17 +331,21 @@ public class GameBoard
 		 */
 		public void dealHand()
 		{
-			int dealtCards = 0;
+			
 			for (int j = 0; j < deck.length; j++)
 			{	
-				if (deck[j] != null && dealtCards < 7 && hand[j] == null)
+				for (int handCard = 0; handCard < hand.length; handCard++)
 				{
-					hand[dealtCards] = deck[j]; // Add the card to the hand
-					hand[dealtCards].setRowCoord(CARD_ROW); // Set the row coordinate of the card
-					hand[dealtCards].setColCoord(CARD_COL + (dealtCards * HAND_CELL_WIDTH)); // Set the column coordinate of the card
-					deck[j] = null; // Remove the card from the deck
-					dealtCards++;
+					if (deck[j] != null && dealtCards < 7 && hand[handCard] == null)
+						{
+							hand[handCard] = deck[j]; // Add the card to the hand
+							hand[handCard].setRowCoord(CARD_ROW); // Set the row coordinate of the card
+							hand[handCard].setColCoord(CARD_COL + (handCard * HAND_CELL_WIDTH)); // Set the column coordinate of the card
+							deck[j] = null; // Remove the card from the deck
+							dealtCards++;
+						}
 				}
+				
 			}
 		}
 
@@ -369,7 +374,7 @@ public class GameBoard
 				}
 				else if (hand[i] == null)
 				{
-					stampBoard(EMPTY_CARD, CARD_ROW, hand[i-1].getColCoord() + HAND_CELL_WIDTH, "\u001B[0m"); // print empty cards
+					stampBoard(EMPTY_CARD, CARD_ROW, CARD_COL + (i * HAND_CELL_WIDTH), "\u001B[0m"); // print empty cards
 				}
 			}
 		}
@@ -428,15 +433,16 @@ public class GameBoard
 			}
 		}
 
-		public void discard()
+		public void discard() throws InterruptedException
 		{
 			
 			for (int i = 0; i < hand.length; i++) // For every card in the hand
 			{
-				if (hand[i].getSelected())
+				if (hand[i] != null && hand[i].getSelected())
 				{
 					eraseCard(hand, i); // Erase the card from the board
 					hand[i] = null; // Discard the selected card
+					dealtCards--; // Decrease number of cards dealt
 				}
 			}
 			for (int card =0; card < selectedLength(); card++) // For every selected card
@@ -444,6 +450,11 @@ public class GameBoard
 				selectedCards[card] = null; // Remove the selected card from the selected cards array
 			}
 			printHandGrid(); // Reprint the hand grid to fix the edge
+			printHand(); // Print the hand
+			printBoard(); // Print the board
+
+			Thread.sleep(500);
+			dealHand();
 			printHand(); // Print the hand
 			printBoard(); // Print the board
 			
@@ -464,13 +475,9 @@ public class GameBoard
 				{
 					int minIndex = indexOfMin(hand, index); // Get the index of the minimum card from the current index to the end of the array
 					swapIndeces(hand, index, minIndex);
-					if (hand[index].getSelected())
+					if (hand[index] != null && hand[index].getSelected())
 					{
 						eraseCard(hand, index); // Erase the card if it is selected
-					}
-					if (hand[minIndex].getSelected())
-					{
-						eraseCard(hand, minIndex); // Erase the card if it is selected
 					}
 					initializeBoard(); // Reinitialize the board to fix the hand box
 				}
@@ -492,10 +499,6 @@ public class GameBoard
 							if (hand[currentSuitIndex].getSelected())
 							{
 								eraseCard(hand, currentSuitIndex); // Erase the card if it is selected
-							}
-							if (hand[nextSuitIndex].getSelected())
-							{
-								eraseCard(hand, nextSuitIndex); // Erase the card if it is selected
 							}
 							initializeBoard(); // Reinitialize the board to fix the hand box
 						}
@@ -650,45 +653,57 @@ public class GameBoard
 			this.printBoard();
 			while (contGame)
 			{
-				char input = scanner.nextLine().charAt(0);
-				switch (input) 
+				// We read if the initial string is empty before going any further
+				String stringInput = scanner.nextLine();
+				if (stringInput.isEmpty())
 				{
-					case '1':
-					case '2':
-					case '3':
-					case '4':
-					case '5':
-					case '6':
-					case '7':
-						int cardIndex = input - '0' - 1; // Convert the character to an index
-						this.eraseCard(hand, cardIndex); // Erase the card from the hand
-						this.selectCard(cardIndex); // Select the card at the index
-						this.appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
-						this.printHand(); // Print the hand
-						this.printBoard();
-						System.out.println(checkForFlush());
-						break;
-					case 's':
-						this.sortHand(1); // Sort the hand by suit
-						this.printHand(); // Print the hand
-						this.printBoard();
-						break;
-					case 'n':
-						this.sortHand(0); // Sort the hand by number
-						this.printHand(); // Print the hand
-						this.printBoard();
-						break;
-					case 'q':
-						contGame = false; // Quit the game
-						break;
-					case 'd':
-						this.discard(); // Discard the selected cards
-						this.printHand(); // Print the hand
-						this.printBoard();
-						break;
-					default:
-						break;
+					System.out.println("Please enter a valid input");
 				}
+				else
+				{
+					// As long as the string isn't empty, we convert it to a char and read the input
+					char input = stringInput.charAt(0);
+					switch (input) 
+					{
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
+							int cardIndex = input - '0' - 1; // Convert the character to an index
+							this.eraseCard(hand, cardIndex); // Erase the card from the hand
+							this.selectCard(cardIndex); // Select the card at the index
+							this.appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
+							this.printHand(); // Print the hand
+							this.printBoard(); // Display the board
+							System.out.println(checkForFlush());
+							break;
+						case 's':
+							this.sortHand(1); // Sort the hand by suit
+							this.printHand(); // Print the hand
+							this.printBoard(); // Display the board
+							break;
+						case 'n':
+							this.sortHand(0); // Sort the hand by number
+							this.printHand(); // Print the hand
+							this.printBoard(); // Display the board
+							break;
+						case 'q':
+							contGame = false; // Quit the game
+							break;
+						case 'd':
+							this.discard(); // Discard the selected cards
+							this.printHand(); // Print the hand
+							this.printBoard(); // Display the board
+							break;
+						default:
+							System.out.println("Please enter a valid input");
+							break;
+					}
+				}
+				
 			}
 		}
 
