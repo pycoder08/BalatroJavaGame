@@ -764,8 +764,7 @@ public class GameBoard
 						return true;
 					}
 				}
-				
-				testPrintSelected();
+
 				// If we didn't find all five cards, we check for a special straight (10, jack, queen, king, ace)
 				boolean specialFound = false;
 				int aceCount = 0;
