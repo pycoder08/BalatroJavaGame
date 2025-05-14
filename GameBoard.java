@@ -1,5 +1,7 @@
 import java.util.Scanner;
 
+import org.checkerframework.checker.units.qual.s;
+
 /**
  * Represents The game board
  * 
@@ -421,16 +423,12 @@ public class GameBoard
 		 */
 		public boolean selectCard(int cardIndex)
 		{
-			int selectIndex = handToSelectedIndex(cardIndex); // Get the index of the card in the selected cards array
-
 			if (hand[cardIndex] != null && !hand[cardIndex].getSelected() && selectedCardsCount < 5) // If the card is not selected and less than 5 cards are selected
 			{
 				hand[cardIndex].setSelected(true); // Toggle the selection status to be true
 				hand[cardIndex].setRowCoord(CARD_ROW - 2); // Set the row coordinate of the card to be above the hand
 				appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
 				selectedCardsCount++; // Increase the number of selected cards
-				System.out.println("real value:" + handToSelectedIndex(cardIndex)); // TEST //
-				System.out.println("selected index:" + selectIndex); // TEST //
 			}
 			else if (hand[cardIndex] != null && !hand[cardIndex].getSelected() && selectedCardsCount >= 5) // If the card is not selected and 5 cards are already selected
 			{
@@ -438,9 +436,7 @@ public class GameBoard
 			}
 			else if (hand[cardIndex] != null && hand[cardIndex].getSelected()) // If the card is already selected
 			{
-				System.out.println("real value:" + handToSelectedIndex(cardIndex)); // TEST //
-				System.out.println("selected index:" + selectIndex); // TEST //
-				selectedCards[selectIndex] = null; // Remove the card from the selected cards array
+				selectedCards[handToSelectedIndex(cardIndex)] = null; // Remove the card from the selected cards array
 				selectedCardsCount--; // Decrease the number of selected cards
 				siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
 				hand[cardIndex].setSelected(false); // Toggle the selection status to be false
@@ -455,7 +451,7 @@ public class GameBoard
 			
 			for (int i = 0; i < hand.length; i++) // For every card in the hand
 			{
-				if (hand[i] != null && hand[i].getSelected())
+				if (hand[i] != null && hand[i].getSelected()) // If the card in the hand is selected
 				{
 					eraseCard(hand, i); // Erase the card from the board
 					hand[i] = null; // Discard the selected card
@@ -465,9 +461,10 @@ public class GameBoard
 			for (int card = 0; card < selectedCardsCount; card++) // For every selected card
 			{
 				selectedCards[card] = null; // Remove the selected card from the selected cards array
-				selectedCardsCount = 0; // reset the number of selected cards
-				siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
 			}
+			selectedCardsCount = 0; // reset the number of selected cards
+			siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
+
 			printHandGrid(); // Reprint the hand grid to fix the edge
 			printHand(); // Print the hand
 			printBoard(); // Print the board
@@ -560,11 +557,11 @@ public class GameBoard
 
 				if ((selectedCards[selectedIndex] != null) && (selectedCards[selectedIndex].equals(hand[index])) || ((selectedCards[selectedIndex] != null) && (dummyCard.equals(hand[index]))))
 				{
-					System.out.println("Match found");
-					System.out.println("I found a match between this selected card: " + selectedCards[selectedIndex].toString() + " and this hand card: " + hand[index].toString());
+					/*System.out.println("Match found");
+					System.out.println("I found a match between this selected card: " + selectedCards[selectedIndex].toString() + " and this hand card: " + hand[index].toString());*/
 					return selectedIndex; // Return the index of the card in the hand
 				}
-				System.out.println("The card I'm looking at in the hand is: " + hand[index].toString());
+				/*System.out.println("The card I'm looking at in the hand is: " + hand[index].toString());
 				
 				
 				if (selectedCards[selectedIndex] != null)
@@ -620,7 +617,7 @@ public class GameBoard
 					System.out.println("This is what the selected card array looks like: ");
 					testPrintSelected();
 				}
-				System.out.println("------------------");
+				System.out.println("------------------");*/
 			}
 			return -1; // Return -1 if the card is not found in the hand
 		}
@@ -731,7 +728,7 @@ public class GameBoard
 		 */
 		public boolean checkForStraight()
 		{
-			boolean straightFound = true;
+			boolean numFound = false;
 
 			if (selectedCardsCount != 5) // If we don't have 5 cards, we can't have a straight
 			{
@@ -741,57 +738,70 @@ public class GameBoard
 			else
 			{
 				
-				boolean numFound = false;
 				for (int startNum = 1; startNum < 9; startNum++) // For every possible number that could start a straight
 				{
 
 					for (int currentNum = startNum; currentNum < startNum + 5; currentNum++) // Loop through five numbers after startNum
 					{
-
+						numFound = false; // Reset numFound to false for each new starting number
 						for (int card = 0; card < selectedCardsCount; card++) // Loop through every seleced card until we find a card of the right number, then break if we find it
 						{
-
 							if (selectedCards[card] != null && selectedCards[card].getNumber() == currentNum)
 							{
-
 								numFound = true;
 								break;
 							}
 						}
+						if (!numFound) // If we didn't find a card of the right number, break out of the loop
+						{
+							startNum = currentNum; // Set the starting number to be the next number so we don't waste time checking
+							break; // We don't return here because we still need to check for the special straight
+						}
 						
 					}
-					if (!numFound) // If we didn't find a card of the right number, return false
-						{
-						straightFound = false;
-						break;
-						}
+					if (numFound) // If we found all five cards, return true. If not, move on to the next starting number
+					{
+						return true;
+					}
 				}
-
+				
+				testPrintSelected();
+				// If we didn't find all five cards, we check for a special straight (10, jack, queen, king, ace)
 				boolean specialFound = false;
 				int aceCount = 0;
 				for (int specialNum = 10; specialNum < 14; specialNum++)
 				{
+					specialFound = false; // Reset specialFound to false for each new starting number
 					for (int specialCard = 0; specialCard < selectedCardsCount; specialCard++) // Loop through every seleced card until we find a card of the right number, then break if we find it
 					{
 						// If we find a number within the 10, jack, queen, king range, set specialFound to true
 						if (selectedCards[specialCard] != null && selectedCards[specialCard].getNumber() == specialNum) 
 							{
-
 								specialFound = true;
 								break;
 							}
-						// If we find an ace, increase aceCount
-						else if (selectedCards[specialCard] != null && selectedCards[specialCard].getNumber() == 1) 
+						// If we find an ace AND no aces have been found yet, increase aceCount and set specialFound to true
+						else if (selectedCards[specialCard] != null && selectedCards[specialCard].getNumber() == 1 && aceCount == 0) 
 						{
-							aceCount = 1;
+							aceCount++;
+							specialNum--; // Decrease specialNum since we used this turn to find the ace
+							specialFound = true;
+							break;
 						}
 					}
+					if (!specialFound) // If we didn't find a special card, return false
+						{
+							return false;
+						}
+				}
+				// If we found a 10-King run and an ace, we have a straight
+				// We check if the last selected card is an ace since the for loop above only checks for 10 through King
+				if ((specialFound && aceCount == 1) || (specialFound && selectedCards[selectedCardsCount - 1].getNumber() == 1)) 
+				{
+					return true;
 				}
 			}
-			if (straightFound); // If nothing flipped straightFound to false, return true
-				{
-					return (true);
-				}
+			return false; // Return false if nothing else was found
 
 		}
 
@@ -849,7 +859,6 @@ public class GameBoard
 								//Thread.sleep(200);
 								this.printBoard(); // Display the board
 								System.out.println(this.checkForStraight());
-								System.out.println(selectedCardsCount);
 								//testPrintSelected();
 								break;
 							}
@@ -863,6 +872,7 @@ public class GameBoard
 							this.sortHand(0); // Sort the hand by number
 							this.printHand(); // Print the hand
 							this.printBoard(); // Display the board
+							
 							break;
 						case 'q':
 							contGame = false; // Quit the game
@@ -881,6 +891,9 @@ public class GameBoard
 			}
 		}
 
+		/**
+		 * Debug method that prints the selected cards to the console for debugging.
+		 */
 		private static void testPrintSelected()
 		{
 			for (int i = 0; i < selectedCards.length; i++)
