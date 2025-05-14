@@ -219,14 +219,16 @@ public class Card // don't forget to rename here and rename the file too!
 	@Override
 	public String toString()
 	{
-		System.out.println("Card: " + this.number + " of " + this.suit + " isSelected: " + this.isSelected + " at (" + this.rowCoord + ", " + this.colCoord + ")");
+		String titleString = "";
+		titleString = "Card: " + this.number + " of " + this.suit + " isSelected: " + this.isSelected + " at (" + this.rowCoord + ", " + this.colCoord + ")";
 		String cardString = this.suitToColor();
 		for (int line = 0; line < 7; line++)
 		{
 			cardString += cardToLines(line) + "\n";
 		}
-		cardString += RESET; // Reset color at the end of the card string
-		return cardString;
+		cardString += RESET; // Reset color at the end of the card string*/
+		titleString += "\n" + cardString;
+		return titleString;
 	}
 
 	/**
