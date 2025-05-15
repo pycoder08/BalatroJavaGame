@@ -1,7 +1,5 @@
 import java.util.Scanner;
 
-import org.checkerframework.checker.units.qual.s;
-
 /**
  * Represents The game board
  * 
@@ -47,6 +45,8 @@ public class GameBoard
 {
 	
 	/***** CONSTANTS  *****/
+
+	// Constants used in placing elements on the board
 	private static final int ROWS = 40;
 	private static final int COLS = 140;
 	private static final int HAND_COL = 30;
@@ -55,6 +55,7 @@ public class GameBoard
 	private static final int CARD_ROW = HAND_ROW + 1;
 	private static final int HAND_CELL_WIDTH = 14;
 
+	// Color codes
 	public static final String RESET  = "\u001B[0m";
 	public static final String BLACK  = "\u001B[30m";
 	public static final String RED    = "\u001B[31m";
@@ -73,13 +74,17 @@ public class GameBoard
 	}
 
 	/***** STATIC VARIABLES *****/
-	// Arrays for the board, colors, and deck
+	// Arrays for the board, colors, deck, and selected cards
 	static String[][] board = new String[ROWS][COLS];
 	static String[][] colors = new String[ROWS][COLS]; // Stores the color of each cell to be applied when printing
 	static Card[] deck = new Card[52];
-	static Card[] selectedCards = new Card[5]; // Array to hold selected cards
+	static Card[] selectedCards = new Card[5];
+
+	// Logic variables
 	static int dealtCardsCount = 0; // Int to keep track of dealt cards
 	static int selectedCardsCount = 0; // Int to keep track of selected cards
+	static int sortType = -1; /// Int to keep track of the sort kind. We set as -1 so it doesn't trigger anything until set
+	
 	// Fill the deck with cards
 	{
 		for (int i = 0; i < 13; i++)
@@ -163,6 +168,7 @@ public class GameBoard
 	 * Returns a string representation of the GameBoard object.
 	 * @return A string representation of the GameBoard object.
 	 */
+        @Override
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder();
@@ -189,6 +195,10 @@ public class GameBoard
 	}
 
 	/***** HELPER METHODS *****/
+
+	/***** SETUP METHODS *****/
+	// These methods are used to initialize/output the game and its parts 
+
 	/**
 	 * Initializes the game board with borders and empty spaces.
 	 */
@@ -245,6 +255,7 @@ public class GameBoard
 	public void printBoard()
 	{
 		StringBuilder sb = new StringBuilder();
+		printHand(); // Update the hand before we output
 		for (int r = 0; r < ROWS; r++)
 		{
 			for (int c = 0; c < COLS; c++)
@@ -262,6 +273,7 @@ public class GameBoard
 			}
 			sb.append("\n"); // Add a new line after every line
 		}
+		
 		System.out.println(sb.toString()); // Print entire board in one go to avoid flickering
 	}
 
@@ -327,32 +339,9 @@ public class GameBoard
 			board[row][col + c * cellWidth] = "┬"; // Replace corner
 			board[row + height - 1][col + c * cellWidth] = "┴"; // Replace corner
 		}
-		}
+	}
 
-		/**
-		 * Deals a hand of cards from the deck to the empty slots in the player's hand but does not print it. 
-		 */
-		public void dealHand()
-		{
-			
-			for (int j = 0; j < deck.length; j++)
-			{	
-				for (int handCard = 0; handCard < hand.length; handCard++)
-				{
-					if (deck[j] != null && dealtCardsCount < 7 && hand[handCard] == null)
-						{
-							hand[handCard] = deck[j]; // Add the card to the hand
-							hand[handCard].setRowCoord(CARD_ROW); // Set the row coordinate of the card
-							hand[handCard].setColCoord(CARD_COL + (handCard * HAND_CELL_WIDTH)); // Set the column coordinate of the card
-							deck[j] = null; // Remove the card from the deck
-							dealtCardsCount++;
-						}
-				}
-				
-			}
-		}
-
-		/**
+	/**
 		 * Prints the hand grid on the game board.
 		 */
 		public void printHandGrid()
@@ -403,6 +392,36 @@ public class GameBoard
 			}
 		}
 
+
+		/***** LOGIC METHODS *****/
+		// These are methods that deal with the behind the scenes logic required to display the game properly
+
+
+		/**
+		 * Deals a hand of cards from the deck to the empty slots in the player's hand but does not print it. 
+		 */
+		public void dealHand()
+		{
+			
+			for (int j = 0; j < deck.length; j++)
+			{	
+				for (int handCard = 0; handCard < hand.length; handCard++)
+				{
+					if (deck[j] != null && dealtCardsCount < 7 && hand[handCard] == null)
+						{
+							hand[handCard] = deck[j]; // Add the card to the hand
+							hand[handCard].setRowCoord(CARD_ROW); // Set the row coordinate of the card
+							hand[handCard].setColCoord(CARD_COL + (handCard * HAND_CELL_WIDTH)); // Set the column coordinate of the card
+							deck[j] = null; // Remove the card from the deck
+							dealtCardsCount++;
+						}
+				}
+				
+			}
+		}
+
+		
+
 		/**
 		 * Shuffles the deck of cards using the Fisher-Yates shuffle algorithm.
 		 */
@@ -446,34 +465,44 @@ public class GameBoard
 			return (true); // Return true if the card was successfully selected
 		}
 
+		/**
+		 * Discards the selected cards and updates/prints the hand accordingly
+		 * @throws InterruptedException
+		 */
 		public void discard() throws InterruptedException
 		{
-			
-			for (int i = 0; i < hand.length; i++) // For every card in the hand
+			if (selectedCardsCount != 0)
 			{
-				if (hand[i] != null && hand[i].getSelected()) // If the card in the hand is selected
+				for (int i = 0; i < hand.length; i++) // For every card in the hand
 				{
-					eraseCard(hand, i); // Erase the card from the board
-					hand[i] = null; // Discard the selected card
-					dealtCardsCount--; // Decrease number of cards dealt
+					if (hand[i] != null && hand[i].getSelected()) // If the card in the hand is selected
+					{
+						eraseCard(hand, i); // Erase the card from the board
+						hand[i] = null; // Discard the selected card
+						dealtCardsCount--; // Decrease number of cards dealt
+					}
+				}
+				for (int card = 0; card < selectedCardsCount; card++) // For every selected card
+				{
+					selectedCards[card] = null; // Remove the selected card from the selected cards array
+				}
+				selectedCardsCount = 0; // reset the number of selected cards
+				siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
+
+				printHandGrid(); // Reprint the hand grid to fix the edge
+				printBoard(); // Print the board
+
+				Thread.sleep(500);
+				dealHand(); // Fill empty spots in the hand
+				printBoard(); // Print the board
+
+				if (sortType == 0 || sortType == 1) // As long as a sort type has been set
+				{
+					Thread.sleep(700); // Pause efore sorting
+					sortHand(sortType); // Sort
+					printBoard(); // Print the board
 				}
 			}
-			for (int card = 0; card < selectedCardsCount; card++) // For every selected card
-			{
-				selectedCards[card] = null; // Remove the selected card from the selected cards array
-			}
-			selectedCardsCount = 0; // reset the number of selected cards
-			siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
-
-			printHandGrid(); // Reprint the hand grid to fix the edge
-			printHand(); // Print the hand
-			printBoard(); // Print the board
-
-			Thread.sleep(500);
-			dealHand();
-			printHand(); // Print the hand
-			printBoard(); // Print the board
-			
 		}
 
 		/**
@@ -528,6 +557,9 @@ public class GameBoard
 
 		}
 
+		/**** Array Methods ****/
+		// These methods perform various tasks on arrays necessary for game logic
+
 		/**
 		 * Swaps two cards in the array at the specified indices.
 		 * @param array The array of cards to swap elements in.
@@ -557,67 +589,8 @@ public class GameBoard
 
 				if ((selectedCards[selectedIndex] != null) && (selectedCards[selectedIndex].equals(hand[index])) || ((selectedCards[selectedIndex] != null) && (dummyCard.equals(hand[index]))))
 				{
-					/*System.out.println("Match found");
-					System.out.println("I found a match between this selected card: " + selectedCards[selectedIndex].toString() + " and this hand card: " + hand[index].toString());*/
 					return selectedIndex; // Return the index of the card in the hand
 				}
-				/*System.out.println("The card I'm looking at in the hand is: " + hand[index].toString());
-				
-				
-				if (selectedCards[selectedIndex] != null)
-				{
-					System.out.println("The number of selected cards is: " + selectedCardsCount);
-					System.out.println("The card I'm looking at in the selected cards is: " + selectedCards[selectedIndex].toString());
-					System.out.println(selectedCards[selectedIndex].toString());
-					System.out.println("Are the two equal? " + selectedCards[selectedIndex].equals(dummyCard));
-
-					System.out.println("The hand card's number is: " + hand[index].getNumber());
-					System.out.println("The selected card's number is: " + selectedCards[selectedIndex].getNumber());
-
-					System.out.println("The hand card's suit is: " + hand[index].getSuit());
-					System.out.println("The selected card's suit is: " + selectedCards[selectedIndex].getSuit());
-
-					System.out.println("The hand card's selected value is: " + hand[index].getSelected());
-					System.out.println("The selected card's selected value is: " + selectedCards[selectedIndex].getSelected());
-
-					System.out.println("Are their numbers equal? ");
-					if (hand[index].getNumber() == selectedCards[selectedIndex].getNumber())
-					{
-						System.out.println("yes");
-					}
-					else
-					{
-						System.out.println("no");
-					}
-					System.out.println("Are their suits equal? ");
-					if (hand[index].getSuit().equalsIgnoreCase(selectedCards[selectedIndex].getSuit()))
-					{
-						System.out.println("yes");
-					}
-					else
-					{
-						System.out.println("no");
-					}
-					System.out.println("Are their selected values equal? ");
-					if (hand[index].getSelected() == selectedCards[selectedIndex].getSelected())
-					{
-						System.out.println("yes");
-					}
-					else
-					{
-						System.out.println("no");
-					}
-
-					System.out.println("This is what the selected card array looks like: ");
-					testPrintSelected();
-				}
-				else
-				{
-					System.out.println("null");
-					System.out.println("This is what the selected card array looks like: ");
-					testPrintSelected();
-				}
-				System.out.println("------------------");*/
 			}
 			return -1; // Return -1 if the card is not found in the hand
 		}
@@ -655,13 +628,11 @@ public class GameBoard
 		 */
 		public static int indexOfSuit(Card[] array, int startIndex, String suit)
 		{
-			Card currentMin = new Card(array[startIndex]); //Copy constructor to avoid modifying the original card
-			int minIndex = startIndex;
+			
 			for (int index = startIndex; index < array.length; index++)
 			{
 				if (array[index].getSuit().equalsIgnoreCase(suit))
 				{
-					currentMin = array[index];
 					return index; // Return the index of the first card of the suit
 				}
 			}
@@ -700,6 +671,11 @@ public class GameBoard
 				}
 			}
 		}
+
+
+		/**** GAME LOGIC METHODS ****/
+		// These methods handle the rules of the game and the play loop
+
 
 		/**
 		 * Checks if the selected cards form a flush (all cards of the same suit).
@@ -804,6 +780,122 @@ public class GameBoard
 
 		}
 
+		/**
+		 * Checks the selected cards for high card, two of a kind, three of a kind, four of a kind, or full house
+		 * @returns 1 through 4 depending on how many times the most frequent card is found, returns 5 if a full house is found, or 6 if a two pair is found
+		 */
+		public int checkForKind()
+		{
+			int modeNum = 0; // Int for the loop logic
+			boolean threeFound = false; // Boolean for finding full house
+			int twosFound = 0; // Int for finding full house and two pair
+			int[] selectedFrequency = new int[13]; // Array to hold the frequency that each number of card appears
+
+			
+				for (int card = 0; card < selectedCardsCount; card++) // For every selected card
+				{
+					selectedFrequency[selectedCards[card].getNumber() - 1]++; // Increase the frequency of the card
+				}
+
+				for (int currentNum = 0; currentNum < 13; currentNum++)
+				{
+					// If the frequency of this card is higher than the last highest, update the highest value
+					if (selectedFrequency[currentNum] > selectedFrequency[modeNum])
+					{
+						modeNum = currentNum;
+					}
+
+					// If we find a card that appears 2 or 3 times, update our booleans accordingly
+					if (selectedFrequency[currentNum] == 2)
+					{
+						twosFound++; // Increase the number of pairs found
+					}
+					if (selectedFrequency[currentNum] == 3)
+					{
+						threeFound = true;
+					}
+				
+				}
+
+				if (twosFound == 1 && threeFound)
+				{
+					return 5; // Full house
+				}
+				else if (twosFound == 2)
+				{
+					return 6; // Two Pair
+				}
+				else
+				{
+					return selectedFrequency[modeNum]; // Return how many times the most frequent card appears 
+				}
+				
+		}
+
+		/**
+		 * Checks if the selected cards form a straight flush (both a straight and a flush)
+		 * @return True if straight flush is found, false otherwise
+		 */
+		public boolean checkForStraightFlush()
+		{
+			return checkForStraight() && checkForFlush();
+		}
+
+		/**
+		 * Checks if the selected cards form a high card (no pattern)
+		 * @return True if high card is found, false otherwise
+		 */
+		public boolean checkForHighCard()
+		{
+			return !checkForFlush() && !checkForStraight() && checkForKind() == 1; // All other hands override high card. We only account for flish and straight since the others are handled in checkForKind 
+		}
+
+		/**
+		 * Checks if the selected cards form a two of a kind
+		 * @return true if two of a kind is found, false otherwise
+		 */
+		public boolean checkForTwoOfAKind()
+		{
+			return !checkForFlush() && checkForKind() == 2; // Flush overrides two of a kind
+		}
+
+		/**
+		 * Checks if the selected cards form a three of a kind
+		 * @return true if three of a kind is found, false otherwise
+		 */
+		public boolean checkForThreeOfAKind()
+		{
+			return !checkForFlush() && checkForKind() == 3; // Flush overrides three of a kind
+		}
+
+		/**
+		 * Checks if the selected cards form a four of a kind
+		 * @return true if four of a kind is found, false otherwise
+		 */
+		public boolean checkForFourOfAKind()
+		{
+			return !checkForFlush() && checkForKind() == 4; // Flush overrides four of a kind
+		}
+
+		/**
+		 * Checks if the selected cards form a full house
+		 * @return true if full house is found, false otherwise
+		 */
+		public boolean checkForFullHouse()
+		{
+			return !checkForFlush() && checkForKind() == 5; // Flush overrides full house
+		}
+
+		/**
+		 * Checks if the selected cards form a two pair
+		 * @return true if two pair is found, false otherwise
+		 */
+		public boolean checkForTwoPair()
+		{
+			return !checkForFlush() && checkForKind() == 6; // Flush overrides two pair
+		}
+
+
 
 		/**
 		 * Main method to play the game.
@@ -820,7 +912,6 @@ public class GameBoard
 			this.printBoard();
 			Thread.sleep(1000); // Sleep for 1 second
 			this.dealHand(); // Deal the hand
-			this.printHand(); // Print the hand
 			this.printBoard();
 			while (contGame)
 			{
@@ -853,33 +944,36 @@ public class GameBoard
 							} 
 							else
 							{
-								this.checkForStraight();
-								this.printHand(); // Print the hand
-								//Thread.sleep(200);
 								this.printBoard(); // Display the board
-								System.out.println(this.checkForStraight());
-								//testPrintSelected();
+								System.out.println("Straight: " + checkForStraight());
+								System.out.println("Flush: " + checkForFlush());
+								System.out.println("Straight Flush: " + checkForStraightFlush());
+								System.out.println("High Card: " + checkForHighCard());
+								System.out.println("Two of a Kind: " + checkForTwoOfAKind());
+								System.out.println("Three of a Kind: " + checkForThreeOfAKind());
+								System.out.println("Four of a Kind: " + checkForFourOfAKind());
+								System.out.println("Full House: " + checkForFullHouse());
+								System.out.println("Two Pair: " + checkForTwoPair());
 								break;
 							}
 							
 						case 's':
-							this.sortHand(1); // Sort the hand by suit
-							this.printHand(); // Print the hand
+						sortType = 1;
+							this.sortHand(sortType); // Sort the hand by suit
 							this.printBoard(); // Display the board
 							break;
 						case 'n':
-							this.sortHand(0); // Sort the hand by number
-							this.printHand(); // Print the hand
+							sortType = 0;
+							this.sortHand(sortType); // Sort the hand by suit
 							this.printBoard(); // Display the board
 							
 							break;
 						case 'q':
+							scanner.close(); // Close the input stream
 							contGame = false; // Quit the game
 							break;
 						case 'd':
-							this.discard(); // Discard the selected cards
-							this.printHand(); // Print the hand
-							this.printBoard(); // Display the board
+							this.discard(); // Discard the selected cards. The method handles printing
 							break;
 						default:
 							System.out.println("Please enter a valid input");
@@ -889,6 +983,11 @@ public class GameBoard
 				
 			}
 		}
+
+
+		/*** DEBUG METHODS ***/
+		// These are useful methods that assist with debugging and aren't used in the actual game logic
+
 
 		/**
 		 * Debug method that prints the selected cards to the console for debugging.
