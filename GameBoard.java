@@ -47,13 +47,22 @@ public class GameBoard
 	/***** CONSTANTS  *****/
 
 	// Constants used in placing elements on the board
-	private static final int ROWS = 40;
-	private static final int COLS = 140;
-	private static final int HAND_COL = 30;
-	private static final int HAND_ROW = 27;
+	private static final int ROWS = 37;
+	private static final int COLS = 165;
+	private static final int HAND_COL = 60;
+	private static final int HAND_ROW = 25;
 	private static final int CARD_COL = HAND_COL + 2;
 	private static final int CARD_ROW = HAND_ROW + 1;
 	private static final int HAND_CELL_WIDTH = 14;
+	private static final int HAND_CELL_HEIGHT = 9;
+	private static final int LEGEND_ROW = HAND_ROW;
+	private static final int LEGEND_COL = 5;
+	private static final int LEGEND_WIDTH = 26;
+	private static final int LEGEND_HEIGHT = 9;
+	private static final int SCORE_BOARD_ROW = 2;
+	private static final int SCORE_BOARD_COL = 5;
+	private static final int SCORE_BOARD_WIDTH = 50;
+	private static final int SCORE_BOARD_HEIGHT = 21;
 
 	// Color codes
 	public static final String RESET  = "\u001B[0m";
@@ -66,12 +75,283 @@ public class GameBoard
 	public static final String CYAN   = "\u001B[36m";
 	public static final String WHITE  = "\u001B[37m";
 	public static final String ORANGE = "\u001B[38;2;255;165;0m";
+	public static final String MAGENTA = "\u001B[38;2;255;0;255m";
+	public static final String DARK_RED = "\u001B[38;2;139;0;0m";
+	public static final String LIME = "\u001B[38;2;0;255;0m";
 
 	// Empty card stamp to erase cards from the board
 	private static final String[] EMPTY_CARD = new String[7];
 	{
 		EMPTY_CARD[0] = EMPTY_CARD[1] = EMPTY_CARD[2] = EMPTY_CARD[3] = EMPTY_CARD[4] = EMPTY_CARD[5] = EMPTY_CARD[6] = "           ";
 	}
+
+	// Array to keep legend text
+	private static final String[] legendArray = new String[6];
+	{
+		legendArray[0] = "Select: 1 - 7";
+		legendArray[1] = "Discard: d";
+		legendArray[2] = "Sort: s/n (suit/number)";
+		legendArray[3] = "Play hand: p";
+		legendArray[4] = "Help: h";
+		legendArray[5] = "Quit: q";
+	}
+
+	// Array to keep blank spaces for erasing the score board
+	private static final String[] BLANK_SCORE = new String [19];
+	{
+		for (int row = 0; row < BLANK_SCORE.length; row++)
+		{
+			BLANK_SCORE[row] = "";
+			for (int col = 0; col < 48; col++)
+			{
+				BLANK_SCORE[row] += " ";
+			}
+		}
+	}
+
+	// Arrays to hold ascii art for different hand types
+
+	private static final String[] STRAIGHT_ARRAY = new String[8];
+	{
+		STRAIGHT_ARRAY[0] = " _____ _             _       _     _   ";
+		STRAIGHT_ARRAY[1] = "/  ___| |           (_)     | |   | |  ";
+		STRAIGHT_ARRAY[2] = "\\ `--.| |_ _ __ __ _ _  __ _| |__ | |_ ";
+		STRAIGHT_ARRAY[3] = " `--. \\ __| '__/ _` | |/ _` | '_ \\| __|";
+		STRAIGHT_ARRAY[4] = "/\\__/ / |_| | | (_| | | (_| | | | | |_ ";
+		STRAIGHT_ARRAY[5] = "\\____/ \\__|_|  \\__,_|_|\\__, |_| |_|\\__|";
+		STRAIGHT_ARRAY[6] = "                        __/ |          ";
+		STRAIGHT_ARRAY[7] = "                       |___/           ";
+
+	}
+
+	private static final String[] FLUSH_ARRAY = new String[6];
+	{
+		FLUSH_ARRAY[0] = " _____ _           _     ";
+		FLUSH_ARRAY[1] = "|  ___| |         | |    ";
+		FLUSH_ARRAY[2] = "| |_  | |_   _ ___| |__  ";
+		FLUSH_ARRAY[3] = "|  _| | | | | / __| '_ \\ ";
+		FLUSH_ARRAY[4] = "| |   | | |_| \\__ \\ | | |";
+		FLUSH_ARRAY[5] = "\\_|   |_|\\__,_|___/_| |_|";
+	}
+
+
+	private static final String[] STRAIGHT_FLUSH_ARRAY = new String[11];
+	{
+		STRAIGHT_FLUSH_ARRAY[0] = " _____ _             _       _     _   ";
+		STRAIGHT_FLUSH_ARRAY[1] = "/  ___| |           (_)     | |   | |  ";
+		STRAIGHT_FLUSH_ARRAY[2] = "\\ `--.| |_ _ __ __ _ _  __ _| |__ | |_ ";
+		STRAIGHT_FLUSH_ARRAY[3] = " `--. \\ __| '__/ _` | |/ _` | '_ \\| __|";
+		STRAIGHT_FLUSH_ARRAY[4] = "/\\__/ / |_| | | (_| | | (_| | | | | |_ ";
+		STRAIGHT_FLUSH_ARRAY[5] = "______ ___|_|  \\__,_|_|\\__, |_| |_|\\__|";
+		STRAIGHT_FLUSH_ARRAY[6] = "|  ___| |         | |   __/ |          ";
+		STRAIGHT_FLUSH_ARRAY[7] = "| |_  | |_   _ ___| |__|___/           ";
+		STRAIGHT_FLUSH_ARRAY[8] = "|  _| | | | | / __| '_ \\               ";
+		STRAIGHT_FLUSH_ARRAY[9] = "| |   | | |_| \\__ \\ | | |             ";
+		STRAIGHT_FLUSH_ARRAY[10] = "\\_|   |_|\\__,_|___/_| |_|              ";
+	}
+
+	private static final String[] HIGH_CARD_ARRAY = new String[8];
+	{
+		HIGH_CARD_ARRAY[0] = " _   _ _       _       _____               _ ";
+		HIGH_CARD_ARRAY[1] = "| | | (_)     | |     /  __ \\             | |";
+		HIGH_CARD_ARRAY[2] = "| |_| |_  __ _| |__   | /  \\/ __ _ _ __ __| |";
+		HIGH_CARD_ARRAY[3] = "|  _  | |/ _` | '_ \\  | |    / _` | '__/ _` |";
+		HIGH_CARD_ARRAY[4] = "| | | | | (_| | | | | | \\__/\\ (_| | | | (_| |";
+		HIGH_CARD_ARRAY[5] = "\\_| |_/_|\\__, |_| |_|  \\____/\\__,_|_|  \\__,_|";
+		HIGH_CARD_ARRAY[6] = "          __/ |                            ";
+		HIGH_CARD_ARRAY[7] = "         |___/                             ";
+	}
+
+	private static final String[] TWO_KIND_ARRAY = new String[9];
+	{
+		TWO_KIND_ARRAY[0] = " _____                                  ";
+		TWO_KIND_ARRAY[1] = "/ __  \\                                 ";
+		TWO_KIND_ARRAY[2] = "`' / /'                                 ";
+		TWO_KIND_ARRAY[3] = "  / /   __    ___    _    _           _ ";
+		TWO_KIND_ARRAY[4] = "./ /___/ _|  / _ \\  | |  (_)         | |";
+		TWO_KIND_ARRAY[5] = "\\_____| |_  / /_\\ \\ | | ___ _ __   __| |";
+		TWO_KIND_ARRAY[6] = " / _ \\|  _| |  _  | | |/ / | '_ \\ / _` |";
+		TWO_KIND_ARRAY[7] = "| (_) | |   | | | | |   <| | | | | (_| |";
+		TWO_KIND_ARRAY[8] = " \\___/|_|   \\_| |_/ |_|\\_\\_|_| |_|\\__,_|";
+	}
+
+	private static final String[] THREE_KIND_ARRAY = new String[9];
+	{
+		THREE_KIND_ARRAY[0] = " _____                                  ";
+		THREE_KIND_ARRAY[1] = "|____ |                                 ";
+		THREE_KIND_ARRAY[2] = "    / /                                 ";
+		THREE_KIND_ARRAY[3] = "    \\ \\ __    ___    _    _           _ ";
+		THREE_KIND_ARRAY[4] = ".___/ // _|  / _ \\  | |  (_)         | |";
+		THREE_KIND_ARRAY[5] = "\\____/| |_  / /_\\ \\ | | ___ _ __   __| |";
+		THREE_KIND_ARRAY[6] = " / _ \\|  _| |  _  | | |/ / | '_ \\ / _` |";
+		THREE_KIND_ARRAY[7] = "| (_) | |   | | | | |   <| | | | | (_| |";
+		THREE_KIND_ARRAY[8] = " \\___/|_|   \\_| |_/ |_|\\_\\_|_| |_|\\__,_|";
+	}
+
+	private static final String[] FOUR_KIND_ARRAY = new String[9];
+	{
+		FOUR_KIND_ARRAY[0] = "   ___                                  ";
+		FOUR_KIND_ARRAY[1] = "  /   |                                 ";
+		FOUR_KIND_ARRAY[2] = " / /| |                                 ";
+		FOUR_KIND_ARRAY[3] = "/ /_| | __    ___    _    _           _ ";
+		FOUR_KIND_ARRAY[4] = "\\___  |/ _|  / _ \\  | |  (_)         | |";
+		FOUR_KIND_ARRAY[5] = "  ____| |_  / /_\\ \\ | | ___ _ __   __| |";
+		FOUR_KIND_ARRAY[6] = " / _ \\|  _| |  _  | | |/ / | '_ \\ / _` |";
+		FOUR_KIND_ARRAY[7] = "| (_) | |   | | | | |   <| | | | | (_| |";
+		FOUR_KIND_ARRAY[8] = " \\___/|_|   \\_| |_/ |_|\\_\\_|_| |_|\\__,_|";
+	}
+
+	private static final String[] HOUSE_ARRAY = new String[10];
+	{
+		HOUSE_ARRAY[0] = "       _____     _ _        ";
+		HOUSE_ARRAY[1] = "      |  ___|   | | |       ";
+		HOUSE_ARRAY[2] = "      | |_ _   _| | |       ";
+		HOUSE_ARRAY[3] = "      |  _| | | | | |      ";
+		HOUSE_ARRAY[4] = " _   _| | | |_| | | |       ";
+		HOUSE_ARRAY[5] = "| | | |_|  \\__,_|_|_|       ";
+		HOUSE_ARRAY[6] = "| |_| | ___  _   _ ___  ___ ";
+		HOUSE_ARRAY[7] = "|  _  |/ _ \\| | | / __|/ _ \\";
+		HOUSE_ARRAY[8] = "| | | | (_) | |_| \\__ \\  __/";
+		HOUSE_ARRAY[9] = "\\_| |_/\\___/ \\__,_|___/\\___|";
+	}
+
+	private static final String[] TWO_PAIR_ARRAY = new String[7];
+	{
+		TWO_PAIR_ARRAY[0] = ""; // Blank line for alignment
+		TWO_PAIR_ARRAY[1] = " _____              ______     _      ";
+		TWO_PAIR_ARRAY[2] = "|_   _|             | ___ \\   (_)     ";
+		TWO_PAIR_ARRAY[3] = "  | |_      _____   | |_/ /_ _ _ _ __ ";
+		TWO_PAIR_ARRAY[4] = "  | \\ \\ /\\ / / _ \\  |  __/ _` | | '__|";
+		TWO_PAIR_ARRAY[5] = "  | |\\ V  V / (_) | | | | (_| | | |   ";
+		TWO_PAIR_ARRAY[6] = "  \\_/ \\_/\\_/ \\___/  \\_|  \\__,_|_|_|   ";
+	}
+
+	// Arrays to hold ascii art for numbers
+
+	private static final String[] ZERO_ARRAY = new String[6];
+	{
+		ZERO_ARRAY[0] = " _____ ";
+		ZERO_ARRAY[1] = "|  _  |";
+		ZERO_ARRAY[2] = "| |/' |";
+		ZERO_ARRAY[3] = "| |/| |";
+		ZERO_ARRAY[4] = "\\ |_/ /";
+		ZERO_ARRAY[5] = " \\___/ ";
+	}
+
+	private static final String[] ONE_ARRAY = new String[6];
+	{
+		ONE_ARRAY[0] = " __  ";
+		ONE_ARRAY[1] = "/  | ";
+		ONE_ARRAY[2] = "`| | ";
+		ONE_ARRAY[3] = " | | ";
+		ONE_ARRAY[4] = "_| |_";
+		ONE_ARRAY[5] = "\\___/";
+	}
+	
+	private static final String[] TWO_ARRAY = new String[6];
+	{
+		TWO_ARRAY[0] = " _____ ";
+		TWO_ARRAY[1] = "/ __  \\";
+		TWO_ARRAY[2] = "`' / /'";
+		TWO_ARRAY[3] = "  / /  ";
+		TWO_ARRAY[4] = "./ /___";
+		TWO_ARRAY[5] = "\\_____/";
+	}
+
+	private static final String[] THREE_ARRAY = new String[6];
+	{
+		THREE_ARRAY[0] = " _____ ";
+		THREE_ARRAY[1] = "|____ |";
+		THREE_ARRAY[2] = "    / /";
+		THREE_ARRAY[3] = "    \\ \\";
+		THREE_ARRAY[4] = ".___/ /";
+		THREE_ARRAY[5] = "\\____/ ";
+	}
+
+	private static final String[] FOUR_ARRAY = new String[6];
+	{
+		FOUR_ARRAY[0] = "   ___ ";
+		FOUR_ARRAY[1] = "  /   |";
+		FOUR_ARRAY[2] = " / /| |";
+		FOUR_ARRAY[3] = "/ /_| |";
+		FOUR_ARRAY[4] = "\\___  |";
+		FOUR_ARRAY[5] = "    |_/";
+	}
+
+	private static final String[] FIVE_ARRAY = new String[6];
+	{
+		FIVE_ARRAY[0] = " _____ ";
+		FIVE_ARRAY[1] = "|  ___|";
+		FIVE_ARRAY[2] = "|___ \\ ";
+		FIVE_ARRAY[3] = "    \\ \\";
+		FIVE_ARRAY[4] = "/\\__/ /";
+		FIVE_ARRAY[5] = "\\____/ ";
+	}
+
+	private static final String[] SIX_ARRAY = new String[6];
+	{
+		SIX_ARRAY[0] = "  ____ ";
+		SIX_ARRAY[1] = " / ___|";
+		SIX_ARRAY[2] = "/ /___ ";
+		SIX_ARRAY[3] = "| ___ \\";
+		SIX_ARRAY[4] = "| \\_/ |";
+		SIX_ARRAY[5] = "\\_____/"; 
+	}
+
+	private static final String[] SEVEN_ARRAY = new String[6];
+	{
+		SEVEN_ARRAY[0] = " ______";
+		SEVEN_ARRAY[1] = "|___  /";
+		SEVEN_ARRAY[2] = "   / / ";
+		SEVEN_ARRAY[3] = "  / /  ";
+		SEVEN_ARRAY[4] = "./ /   ";
+		SEVEN_ARRAY[5] = "\\_/    ";
+	}
+
+	private static final String[] EIGHT_ARRAY = new String[6];
+	{
+		EIGHT_ARRAY[0] = " _____ ";
+		EIGHT_ARRAY[1] = "|  _  |";
+		EIGHT_ARRAY[2] = " \\ V / ";
+		EIGHT_ARRAY[3] = " / _ \\ ";
+		EIGHT_ARRAY[4] = "| |_| |";
+		EIGHT_ARRAY[5] = "\\_____/"; 
+	}
+
+	private static final String[] NINE_ARRAY = new String[6];
+	{
+		NINE_ARRAY[0] = " _____ ";
+		NINE_ARRAY[1] = "|  _  |";
+		NINE_ARRAY[2] = "| |_| |";
+		NINE_ARRAY[3] = "\\____ |";
+		NINE_ARRAY[4] = ".___/ /";
+		NINE_ARRAY[5] = "\\____/ ";
+	}
+
+	// Array for all the number arrays
+	private static final String[][] NUMBERS_ARRAY = new String[10][];
+	{
+		NUMBERS_ARRAY[0] = ZERO_ARRAY;
+		NUMBERS_ARRAY[1] = ONE_ARRAY;
+		NUMBERS_ARRAY[2] = TWO_ARRAY;
+		NUMBERS_ARRAY[3] = THREE_ARRAY;
+		NUMBERS_ARRAY[4] = FOUR_ARRAY;
+		NUMBERS_ARRAY[5] = FIVE_ARRAY;
+		NUMBERS_ARRAY[6] = SIX_ARRAY;
+		NUMBERS_ARRAY[7] = SEVEN_ARRAY;
+		NUMBERS_ARRAY[8] = EIGHT_ARRAY;
+		NUMBERS_ARRAY[9] = NINE_ARRAY;
+	}
+
+	private static final String[] PLUS_ARRAY = new String[4];
+	{
+		PLUS_ARRAY[0] = "   _   ";
+		PLUS_ARRAY[1] = " _| |_ ";
+		PLUS_ARRAY[2] = "|_   _|";
+		PLUS_ARRAY[3] = "  |_|  ";
+	}
+
+
 
 	/***** STATIC VARIABLES *****/
 	// Arrays for the board, colors, deck, and selected cards
@@ -83,7 +363,10 @@ public class GameBoard
 	// Logic variables
 	static int dealtCardsCount = 0; // Int to keep track of dealt cards
 	static int selectedCardsCount = 0; // Int to keep track of selected cards
-	static int sortType = -1; /// Int to keep track of the sort kind. We set as -1 so it doesn't trigger anything until set
+	static int sortType = 0; /// Int to keep track of the sort kind. Set to 0 by default
+	static String currentHandType = ""; // Int to keep track of the current hand type.
+	static int currentPoints = 0; // Int to keep track of the current points
+	static int currentMult = 0; // Int to keep track of the current multiplier
 	
 	// Fill the deck with cards
 	{
@@ -219,6 +502,8 @@ public class GameBoard
 			}
 		}
 		printBox(0,0, ROWS, COLS, WHITE); // Draw the outer border of the board
+		printScoreBoard(); // Draw the score board
+		printLegend(); // Draw the legend box
 		printHandGrid(); // Draw the hand box
 
 		// Print number labels
@@ -341,12 +626,76 @@ public class GameBoard
 		}
 	}
 
-	/**
+		/**
 		 * Prints the hand grid on the game board.
 		 */
 		public void printHandGrid()
 		{
-			printHorizBoxes(HAND_ROW, HAND_COL, 9, HAND_CELL_WIDTH, 7); // Draw the hand box
+			printHorizBoxes(HAND_ROW, HAND_COL, HAND_CELL_HEIGHT, HAND_CELL_WIDTH, 7); // Draw the hand box
+		}
+
+		/**
+		 * Prints the legend on the game board.
+		 */
+		public void printLegend()
+		{
+			printBox(LEGEND_ROW, LEGEND_COL, LEGEND_HEIGHT, LEGEND_WIDTH, WHITE); // Draw the legend box)
+			stampBoard(legendArray, LEGEND_ROW + 1, LEGEND_COL + 1, WHITE); // Stamp the legend on the board
+		}
+
+		public void printScoreBoard()
+		{
+			printBox(SCORE_BOARD_ROW, SCORE_BOARD_COL, SCORE_BOARD_HEIGHT, SCORE_BOARD_WIDTH, WHITE); // Draw the score box
+			printHandText(); // Print the hand type to the board
+			stampBoard(PLUS_ARRAY, SCORE_BOARD_ROW + 13, SCORE_BOARD_COL + 21, WHITE); // Stamp the plus sign on the board
+			stampBoard(intToAscii("" + currentPoints), SCORE_BOARD_ROW + 12, SCORE_BOARD_COL + 5, BLUE); // Stamp the points
+			stampBoard(intToAscii("" + currentMult), SCORE_BOARD_ROW + 12, SCORE_BOARD_COL + 32, DARK_RED); // Stamp the mult
+		}
+
+		public void printHandText()
+		{
+			clearScoreBoard(); // Clear the score box
+			if (currentHandType.equalsIgnoreCase("Straight"))
+			{
+				stampBoard(STRAIGHT_ARRAY, 3, 10, BLUE); // Stamp the straight on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Flush"))
+			{
+				stampBoard(FLUSH_ARRAY, 3, 17, RED); // Stamp the flush on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Straight Flush"))
+			{
+				stampBoard(STRAIGHT_FLUSH_ARRAY, 3, 10, CYAN); // Stamp the straight flush on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("High Card"))
+			{
+				stampBoard(HIGH_CARD_ARRAY, 3, 8, ORANGE); // Stamp the high card on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Two Of A Kind"))
+			{
+				stampBoard(TWO_KIND_ARRAY, 3, 10, PURPLE); // Stamp the two pair on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Three Of A Kind"))
+			{
+				stampBoard(THREE_KIND_ARRAY, 3, 10, GREEN); // Stamp the three of a kind on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Four Of A Kind"))
+			{
+				stampBoard(FOUR_KIND_ARRAY, 3, 10, YELLOW); // Stamp the four of a kind on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Full House"))
+			{
+				stampBoard(HOUSE_ARRAY, 3, 16, MAGENTA); // Stamp the full house on the board
+			}
+			else if (currentHandType.equalsIgnoreCase("Two Pair"))
+			{
+				stampBoard(TWO_PAIR_ARRAY, 3, 10, LIME); // Stamp the two pair on the board
+			}
+		}
+
+		private void clearScoreBoard()
+		{
+			stampBoard(BLANK_SCORE, 3, 6, WHITE); // Clear the score box
 		}
 
 		/**
@@ -490,18 +839,21 @@ public class GameBoard
 				siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
 
 				printHandGrid(); // Reprint the hand grid to fix the edge
+				clearScoreBoard(); // Clear the score box
+				currentHandType = ""; // Reset the hand type
+				printScoreBoard(); // Re-print the score box
 				printBoard(); // Print the board
 
+				
 				Thread.sleep(500);
 				dealHand(); // Fill empty spots in the hand
 				printBoard(); // Print the board
 
-				if (sortType == 0 || sortType == 1) // As long as a sort type has been set
-				{
-					Thread.sleep(700); // Pause efore sorting
-					sortHand(sortType); // Sort
-					printBoard(); // Print the board
-				}
+				
+				Thread.sleep(700); // Pause efore sorting
+				sortHand(sortType); // Sort
+				printBoard(); // Print the board
+				
 			}
 		}
 
@@ -533,7 +885,7 @@ public class GameBoard
 
 				for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) // For each suit in the suits array
 				{
-					int nextSuitIndex = 0;
+					int nextSuitIndex;
 					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1 && currentSuitIndex < hand.length - 1) // While there are upcoming cards of the suit in the hand and we haven't reached the end of the hand
 					{
 						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, suits[suitIndex]); // Get the index of the next card of the proper suit
@@ -555,6 +907,36 @@ public class GameBoard
 				}
 			}
 
+		}
+
+		private String[] intToAscii(String numberString)
+		{
+			char[] numberChars = numberString.toCharArray(); // Split the number into each of its digits
+			String[] asciiArray = new String[6]; // Create an array to hold the ascii art for each digit
+
+			if (numberChars.length == 1) // If the number is one digit
+			{
+				for (int i = 0; i < 6; i++) // For each line of ascii art
+				{
+					asciiArray[i] = ""; // Initialize the ascii array
+					asciiArray[i] += "   " + NUMBERS_ARRAY[Integer.parseInt("" + numberChars[0])][i]; // Add each line to the array with spaces for alignment
+				}
+			}
+			else if (numberChars.length == 2)
+			{
+				for (int i = 0; i < 6; i++)
+				{
+					// Ints for first and second digits
+					int firstDigit = Integer.parseInt("" + numberChars[0]);
+					int secondDigit = Integer.parseInt("" + numberChars[1]);
+
+					// Add the lines of ascii art for both digits to the array
+					asciiArray[i] = ""; // Initialize the ascii array
+					asciiArray[i] += NUMBERS_ARRAY[firstDigit][i] + " " + NUMBERS_ARRAY[secondDigit][i];
+				}
+			}
+			return asciiArray; // Return the ascii array
+			
 		}
 
 		/**** Array Methods ****/
@@ -693,6 +1075,7 @@ public class GameBoard
 						return false; // Not a flush
 					}
 				}
+				currentHandType = "Flush"; // Set the current hand type to flush
 				return true; // All cards have the same suit, it's a flush
 			}
 			return false;
@@ -737,6 +1120,7 @@ public class GameBoard
 					}
 					if (numFound) // If we found all five cards, return true. If not, move on to the next starting number
 					{
+						currentHandType = "Straight"; // Set the current hand type to straight
 						return true;
 					}
 				}
@@ -773,6 +1157,7 @@ public class GameBoard
 				// We check if the last selected card is an ace since the for loop above only checks for 10 through King
 				if ((specialFound && aceCount == 1) || (specialFound && selectedCards[selectedCardsCount - 1].getNumber() == 1)) 
 				{
+					currentHandType = "Straight"; // Set the current hand type to straight
 					return true;
 				}
 			}
@@ -850,6 +1235,7 @@ public class GameBoard
 			return !checkForFlush() && !checkForStraight() && checkForKind() == 1; // All other hands override high card. We only account for flish and straight since the others are handled in checkForKind 
 		}
 
+
 		/**
 		 * Checks if the selected cards form a two of a kind
 		 * @return true if two of a kind is found, false otherwise
@@ -895,6 +1281,53 @@ public class GameBoard
 			return !checkForFlush() && checkForKind() == 6; // Flush overrides two pair
 		}
 
+		public String checkHandType()
+		{
+			// Check for each hand type
+			if (checkForStraightFlush()) 
+			{
+				currentHandType = "Straight Flush";
+			} 
+			else if (checkForFourOfAKind()) 
+			{
+				currentHandType = "Four of a Kind";
+			} 
+			else if (checkForFullHouse()) 
+			{
+				currentHandType = "Full House";
+			} 
+			else if (checkForFlush()) 
+			{
+				currentHandType = "Flush";
+			} 
+			else if (checkForStraight()) 
+			{
+				currentHandType = "Straight";
+			} 
+			else if (checkForThreeOfAKind()) 
+			{
+				currentHandType = "Three of a Kind";
+			} 
+			else if (checkForTwoPair()) 
+			{
+				currentHandType = "Two Pair";
+			} 
+			else if (checkForTwoOfAKind()) 
+			{
+				currentHandType = "Two of a Kind";
+			} 
+			else if (checkForHighCard()) 
+			{
+				currentHandType = "High Card";
+			} 
+			else 
+			{
+				currentHandType = "";
+			}
+
+			return currentHandType;
+		}
+
 
 
 		/**
@@ -903,8 +1336,7 @@ public class GameBoard
 		 */
 		public void playGame() throws InterruptedException
 		{
-			boolean contGame = true;
-			
+			boolean contGame = true; // Set LCV to true
 			
 			Scanner scanner = new Scanner(System.in);
 			this.initializeBoard();
@@ -912,6 +1344,7 @@ public class GameBoard
 			this.printBoard();
 			Thread.sleep(1000); // Sleep for 1 second
 			this.dealHand(); // Deal the hand
+			sortHand(sortType); // Sort the hand
 			this.printBoard();
 			while (contGame)
 			{
@@ -944,16 +1377,13 @@ public class GameBoard
 							} 
 							else
 							{
+								String[] testString = new String[1];
+								testString[0] = "+2";
+								stampBoard(testString, HAND_ROW - 2, HAND_COL + 6, "\u001B[0m");
+
+								checkHandType(); // Check the hand type
+								printScoreBoard(); // Print the score board
 								this.printBoard(); // Display the board
-								System.out.println("Straight: " + checkForStraight());
-								System.out.println("Flush: " + checkForFlush());
-								System.out.println("Straight Flush: " + checkForStraightFlush());
-								System.out.println("High Card: " + checkForHighCard());
-								System.out.println("Two of a Kind: " + checkForTwoOfAKind());
-								System.out.println("Three of a Kind: " + checkForThreeOfAKind());
-								System.out.println("Four of a Kind: " + checkForFourOfAKind());
-								System.out.println("Full House: " + checkForFullHouse());
-								System.out.println("Two Pair: " + checkForTwoPair());
 								break;
 							}
 							
