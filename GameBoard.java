@@ -856,9 +856,6 @@ public class GameBoard
 				siftArray(selectedCards); // Sift out the null values to make sure the first cards in the array are full
 
 				printHandGrid(); // Reprint the hand grid to fix the edge
-				clearScoreBoard(); // Clear the score box
-				currentHandType = ""; // Reset the hand type
-				printScoreBoard(); // Re-print the score box
 
 			}
 		}
@@ -869,6 +866,10 @@ public class GameBoard
 		 */
 		private void discard() throws InterruptedException
 		{
+			clearScoreBoard(); // Clear the score box
+			currentHandType = ""; // Reset the hand type
+			printScoreBoard(); // Re-print the score box
+
 			removeSelectedCards(); // Remove the selected cards from the hand
 			printBoard(); // Print the board
 			Thread.sleep(500); // Pause for half a second
@@ -1382,6 +1383,11 @@ public class GameBoard
 			removeSelectedCards(); // Remove the selected cards from the hand
 			printCards(playHand);
 			printBoard(); // Print the board
+
+
+			clearScoreBoard(); // Clear the score box
+			currentHandType = ""; // Reset the hand type
+			printScoreBoard(); // Re-print the score box
 		}
 
 
