@@ -53,6 +53,7 @@ public class GameBoard
 	private static final int HAND_ROW = 25;
 	private static final int CARD_COL = HAND_COL + 2;
 	private static final int CARD_ROW = HAND_ROW + 1;
+	private static final int CARD_WIDTH = 11; // While this doesn't control the width of the card, it is convenient to have as a constant
 	private static final int HAND_CELL_WIDTH = 14;
 	private static final int HAND_CELL_HEIGHT = 9;
 	private static final int LEGEND_ROW = HAND_ROW;
@@ -493,12 +494,15 @@ public class GameBoard
 		board[ROWS - 1][0] = "└";
 		board[ROWS - 1][COLS - 1] = "┘";
 
-		// Add the borders using loops
+		
 		for (int r = 0; r < ROWS; r++)
 		{
 			for (int c = 0; c < COLS; c++)
 			{
-				board[r][c] = " ";
+				if (board[r][c] == null)
+				{
+					board[r][c] = " ";
+				}
 			}
 		}
 		printBox(0,0, ROWS, COLS, WHITE); // Draw the outer border of the board
@@ -695,7 +699,7 @@ public class GameBoard
 
 		private void clearScoreBoard()
 		{
-			stampBoard(BLANK_SCORE, 3, 6, WHITE); // Clear the score box
+			erase(SCORE_BOARD_ROW + 1, SCORE_BOARD_COL + 1, SCORE_BOARD_WIDTH - 2, SCORE_BOARD_HEIGHT - 2); // Clear the score box
 		}
 
 		/**
@@ -703,17 +707,13 @@ public class GameBoard
 		 */
 		public void printCards(Card[] cardArray)
 		{
-			for (int i = 0; i < hand.length; i++)
+			for (int i = 0; i < cardArray.length; i++)
 			{
-				if (hand[i] != null && !hand[i].getSelected())
+				if (cardArray[i] != null)
 				{
-					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), hand[i].suitToColor());
+					stampBoard(cardArray[i].cardToLinesArray(), cardArray[i].getRowCoord(), cardArray[i].getColCoord(), cardArray[i].suitToColor());
 				}
-				else if (hand[i] != null && hand[i].getSelected())
-				{
-					stampBoard(hand[i].cardToLinesArray(), hand[i].getRowCoord(), hand[i].getColCoord(), hand[i].suitToColor()); // Reset color for selected cards
-				}
-				else if (hand[i] == null)
+				else if (cardArray[i] == null)
 				{
 					stampBoard(EMPTY_CARD, CARD_ROW, CARD_COL + (i * HAND_CELL_WIDTH), "\u001B[0m"); // print empty cards
 				}
@@ -728,6 +728,17 @@ public class GameBoard
 			printCards(hand);
 		}
 
+		private void erase(int startRow, int startCol, int width, int height)
+		{
+			for (int r = startRow; r < startRow + height; r++)
+			{
+				for (int c = startCol; c < startCol + width; c++)
+				{
+					board[r][c] = " ";  // Reset the cell to empty
+				}
+			}
+		}
+
 		/**
 		 * Erases a card from the hand by stamping an empty card at its position.
 		 * @param cardArray The array of cards to erase from.
@@ -737,8 +748,14 @@ public class GameBoard
 		{
 			if (cardArray[cardIndex] != null)
 			{
-				stampBoard(EMPTY_CARD, hand[cardIndex].getRowCoord(), hand[cardIndex].getColCoord(), "\u001B[0m"); // Reset color for erased cards
+				erase (hand[cardIndex].getRowCoord(), hand[cardIndex].getColCoord(), HAND_CELL_WIDTH - 2, HAND_CELL_HEIGHT - 2); // Reset color for erased cards
 			}
+		}
+
+		
+		private void eraseHand()
+		{
+			erase(HAND_ROW -2, HAND_COL, HAND_CELL_WIDTH * 7, HAND_CELL_HEIGHT); // Clear the hand box
 		}
 
 
@@ -815,10 +832,10 @@ public class GameBoard
 		}
 
 		/**
-		 * Discards the selected cards and updates/prints the hand accordingly
+		 * Removes selected cards from the hand and updates the board without printing it
 		 * @throws InterruptedException
 		 */
-		public void discard() throws InterruptedException
+		public void removeSelectedCards()
 		{
 			if (selectedCardsCount != 0)
 			{
@@ -842,19 +859,26 @@ public class GameBoard
 				clearScoreBoard(); // Clear the score box
 				currentHandType = ""; // Reset the hand type
 				printScoreBoard(); // Re-print the score box
-				printBoard(); // Print the board
 
-				
-				Thread.sleep(500);
-				dealHand(); // Fill empty spots in the hand
-				printBoard(); // Print the board
-
-				
-				Thread.sleep(700); // Pause efore sorting
-				sortHand(sortType); // Sort
-				printBoard(); // Print the board
-				
 			}
+		}
+
+		/**
+		 *  Discards the selected cards and updates/prints the board accordingly
+		 * @throws InterruptedException
+		 */
+		private void discard() throws InterruptedException
+		{
+			removeSelectedCards(); // Remove the selected cards from the hand
+			printBoard(); // Print the board
+			Thread.sleep(500); // Pause for half a second
+			dealHand(); // Fill empty spots in the hand
+			printBoard(); // Print the board
+
+			
+			Thread.sleep(700); // Pause efore sorting
+			sortHand(sortType); // Sort
+			printBoard(); // Print the board
 		}
 
 		/**
@@ -876,7 +900,8 @@ public class GameBoard
 					{
 						eraseCard(hand, index); // Erase the card if it is selected
 					}
-					initializeBoard(); // Reinitialize the board to fix the hand box
+					eraseHand(); // Erase the hand box to fix the edge
+					printHandGrid(); // Reprint the hand grid to fix the edge
 				}
 			}
 			else if (sortKind == 1) // Sort by suit
@@ -897,7 +922,8 @@ public class GameBoard
 							{
 								eraseCard(hand, currentSuitIndex); // Erase the card if it is selected
 							}
-							initializeBoard(); // Reinitialize the board to fix the hand box
+							eraseHand(); // Erase the hand box to fix the edge
+							printHandGrid(); // Reprint the hand grid to fix the edge
 						}
 						else
 						{
@@ -1328,6 +1354,36 @@ public class GameBoard
 			return currentHandType;
 		}
 
+		private void playHand() throws InterruptedException
+		{
+			Card[] playHand = new Card[5]; // Create a new array to hold the play hand
+			int playSize = selectedCardsCount; // Get the number of selected cards before we wipe the selected array
+			int startRow = HAND_ROW - 10; // Set the starting row for the play hand
+			int totalWidth = playSize * HAND_CELL_WIDTH; // Calculate the total width of the play hand
+			// Set the starting column for the play hand, shifting it backwards from column 109 (the middle of the hand)
+			// Since each card has an odd width (to ensure it has a middle column) we subtract 1 from the total width before dividing by 2
+			int startCol = 110 - ((totalWidth - 1)/2); 
+			for (int i = 0; i < playHand.length; i++)
+			{
+				playHand[i] = null; // Initialize the play hand as null before filling it
+			}
+			for (int i = 0; i < selectedCardsCount; i++)
+			{
+				if (selectedCards[i] != null) // If the selected card is not null
+				{
+					playHand[i] = new Card (selectedCards[i]); // Add the selected card to the play hand
+					playHand[i].setRowCoord(startRow); // Set the row coordinate of the card
+					playHand[i].setColCoord(startCol + (i * HAND_CELL_WIDTH)); // Set the column coordinate of the card
+					System.out.println(playHand[i].toString()); 
+				}
+			}
+			System.out.println("Selected Cards:");
+			testPrintSelected(); // Print the selected cards for debugging
+			removeSelectedCards(); // Remove the selected cards from the hand
+			printCards(playHand);
+			printBoard(); // Print the board
+		}
+
 
 
 		/**
@@ -1337,7 +1393,6 @@ public class GameBoard
 		public void playGame() throws InterruptedException
 		{
 			boolean contGame = true; // Set LCV to true
-			
 			Scanner scanner = new Scanner(System.in);
 			this.initializeBoard();
 			this.shuffleDeck(); // Shuffle the deck
@@ -1404,6 +1459,9 @@ public class GameBoard
 							break;
 						case 'd':
 							this.discard(); // Discard the selected cards. The method handles printing
+							break;
+						case 'p':
+							this.playHand(); // Play the hand
 							break;
 						default:
 							System.out.println("Please enter a valid input");
