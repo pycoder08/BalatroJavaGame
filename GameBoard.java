@@ -47,10 +47,10 @@ public class GameBoard
 	/***** CONSTANTS  *****/
 
 	// Constants used in placing elements on the board
-	private static final int ROWS = 37;
+	private static final int ROWS = 41;
 	private static final int COLS = 165;
 	private static final int HAND_COL = 60;
-	private static final int HAND_ROW = 25;
+	private static final int HAND_ROW = ROWS - 11; // 12 rows from the bottom
 	private static final int CARD_COL = HAND_COL + 2;
 	private static final int CARD_ROW = HAND_ROW + 1;
 	private static final int CARD_WIDTH = 11; // While this doesn't control the width of the card, it is convenient to have as a constant
@@ -62,8 +62,30 @@ public class GameBoard
 	private static final int LEGEND_HEIGHT = 9;
 	private static final int SCORE_BOARD_ROW = 2;
 	private static final int SCORE_BOARD_COL = 5;
-	private static final int SCORE_BOARD_WIDTH = 50;
-	private static final int SCORE_BOARD_HEIGHT = 21;
+	private static final int SCORE_BOARD_WIDTH = 51;
+	private static final int SCORE_BOARD_HEIGHT = 27;
+
+	private static final int DECK_ROW = CARD_ROW;
+	private static final int DECK_COL = SCORE_BOARD_COL + SCORE_BOARD_WIDTH - CARD_WIDTH;
+
+	private static final int POINTS_ROW = SCORE_BOARD_ROW + SCORE_BOARD_HEIGHT - 8; // The score should be a little from the bottom of the scoreboard. Makes for easier changes
+	private static final int POINTS_COL =  SCORE_BOARD_COL + 2; // The score is a little to the right of the left edge of the score board
+
+	private static final int X_ROW = POINTS_ROW + 1;
+	private static final int X_COL = POINTS_COL + 20;
+
+	private static final int MULT_ROW = POINTS_ROW;
+	private static final int MULT_COL = X_COL + 8; 
+	
+
+	// Dimenstions and location for the score box, linked to where the points are printed
+	private static final int SCORE_BOX_HEIGHT = 9;
+	private static final int SCORE_BOX_ROW = POINTS_ROW - SCORE_BOX_HEIGHT;
+	private static final int SCORE_BOX_COL = POINTS_COL;
+	private static final int SCORE_BOX_WIDTH = SCORE_BOARD_WIDTH - 2 * (POINTS_COL - SCORE_BOARD_COL);
+
+	private static final int SCORE_ROW = SCORE_BOX_ROW + 1;
+	private static final int SCORE_COL = SCORE_BOARD_COL + 3;
 
 	// Color codes
 	public static final String RESET  = "\u001B[0m";
@@ -84,6 +106,17 @@ public class GameBoard
 	private static final String[] EMPTY_CARD = new String[7];
 	{
 		EMPTY_CARD[0] = EMPTY_CARD[1] = EMPTY_CARD[2] = EMPTY_CARD[3] = EMPTY_CARD[4] = EMPTY_CARD[5] = EMPTY_CARD[6] = "           ";
+	}
+
+	private static final String[] CARD_BACK = new String[7];
+	{
+		CARD_BACK[0] = "┌─────────┐";
+		CARD_BACK[1] = "│# # # # #│";
+		CARD_BACK[2] = "│# # # # #│";
+		CARD_BACK[3] = "│# # # # #│";
+		CARD_BACK[4] = "│# # # # #│";
+		CARD_BACK[5] = "│# # # # #│";
+		CARD_BACK[6] = "└─────────┘";
 	}
 
 	// Array to keep legend text
@@ -202,19 +235,20 @@ public class GameBoard
 		FOUR_KIND_ARRAY[8] = " \\___/|_|   \\_| |_/ |_|\\_\\_|_| |_|\\__,_|";
 	}
 
-	private static final String[] HOUSE_ARRAY = new String[10];
+	private static final String[] HOUSE_ARRAY = new String[9];
 	{
-		HOUSE_ARRAY[0] = "       _____     _ _        ";
-		HOUSE_ARRAY[1] = "      |  ___|   | | |       ";
-		HOUSE_ARRAY[2] = "      | |_ _   _| | |       ";
-		HOUSE_ARRAY[3] = "      |  _| | | | | |      ";
-		HOUSE_ARRAY[4] = " _   _| | | |_| | | |       ";
-		HOUSE_ARRAY[5] = "| | | |_|  \\__,_|_|_|       ";
-		HOUSE_ARRAY[6] = "| |_| | ___  _   _ ___  ___ ";
-		HOUSE_ARRAY[7] = "|  _  |/ _ \\| | | / __|/ _ \\";
-		HOUSE_ARRAY[8] = "| | | | (_) | |_| \\__ \\  __/";
-		HOUSE_ARRAY[9] = "\\_| |_/\\___/ \\__,_|___/\\___|";
+		HOUSE_ARRAY[0] = "       ______     _ _       ";
+		HOUSE_ARRAY[1] = "       |  ___|   | | |      ";
+		HOUSE_ARRAY[2] = "       | |_ _   _| | |      ";
+		HOUSE_ARRAY[3] = " _   _ |  _| | | | | |      ";
+		HOUSE_ARRAY[4] = "| | | || | | |_| | | |      ";
+		HOUSE_ARRAY[5] = "| |_| |\\_|_ \\__,_|_|_|  ___ ";
+		HOUSE_ARRAY[6] = "|  _  |/ _ \\| | | / __|/ _ \\";
+		HOUSE_ARRAY[7] = "| | | | (_) | |_| \\__ \\  __/";
+		HOUSE_ARRAY[8] = "\\_| |_/\\___/ \\__,_|___/\\___|";
 	}
+
+
 
 	private static final String[] TWO_PAIR_ARRAY = new String[7];
 	{
@@ -344,12 +378,12 @@ public class GameBoard
 		NUMBERS_ARRAY[9] = NINE_ARRAY;
 	}
 
-	private static final String[] PLUS_ARRAY = new String[4];
+	private static final String[] X_ARRAY = new String[4];
 	{
-		PLUS_ARRAY[0] = "   _   ";
-		PLUS_ARRAY[1] = " _| |_ ";
-		PLUS_ARRAY[2] = "|_   _|";
-		PLUS_ARRAY[3] = "  |_|  ";
+		X_ARRAY[0] = "__   __";
+		X_ARRAY[1] = "\\ \\_/ /";
+		X_ARRAY[2] = " > _ < ";
+		X_ARRAY[3] = "/_/ \\_\\";
 	}
 
 
@@ -367,7 +401,8 @@ public class GameBoard
 	static int sortType = 0; /// Int to keep track of the sort kind. Set to 0 by default
 	static String currentHandType = ""; // Int to keep track of the current hand type.
 	static int currentPoints = 0; // Int to keep track of the current points
-	static int currentMult = 0; // Int to keep track of the current multiplier
+	static int currentMult = 1; // Int to keep track of the current multiplier
+	static int currentScore = 0; // Int to keep track of the overall score
 	
 	// Fill the deck with cards
 	{
@@ -508,6 +543,7 @@ public class GameBoard
 		printBox(0,0, ROWS, COLS, WHITE); // Draw the outer border of the board
 		printScoreBoard(); // Draw the score board
 		printLegend(); // Draw the legend box
+		printCardBack(DECK_ROW, DECK_COL); // Draw deck symbol
 		printHandGrid(); // Draw the hand box
 
 		// Print number labels
@@ -540,11 +576,18 @@ public class GameBoard
 
 	/**
 	 * Prints the game board to the console. Each cell is colored based on the color stored in the colors array.
+	 * @param printHand A boolean indicating whether to print the hand or not
 	 */
-	public void printBoard()
+	public void printBoard(boolean printHand)
 	{
 		StringBuilder sb = new StringBuilder();
-		printHand(); // Update the hand before we output
+
+		// Only print the hand if we tell it to. This is important for printing the back of cards when discarding
+		if (printHand)
+		{
+			printHand(); // Update the hand before we output
+		}
+
 		for (int r = 0; r < ROWS; r++)
 		{
 			for (int c = 0; c < COLS; c++)
@@ -651,14 +694,27 @@ public class GameBoard
 		{
 			printBox(SCORE_BOARD_ROW, SCORE_BOARD_COL, SCORE_BOARD_HEIGHT, SCORE_BOARD_WIDTH, WHITE); // Draw the score box
 			printHandText(); // Print the hand type to the board
-			stampBoard(PLUS_ARRAY, SCORE_BOARD_ROW + 13, SCORE_BOARD_COL + 21, WHITE); // Stamp the plus sign on the board
-			stampBoard(intToAscii("" + currentPoints), SCORE_BOARD_ROW + 12, SCORE_BOARD_COL + 5, BLUE); // Stamp the points
-			stampBoard(intToAscii("" + currentMult), SCORE_BOARD_ROW + 12, SCORE_BOARD_COL + 32, DARK_RED); // Stamp the mult
+			printBox(SCORE_BOX_ROW, SCORE_BOX_COL, SCORE_BOX_HEIGHT, SCORE_BOX_WIDTH, WHITE);
+			stampBoard(X_ARRAY, X_ROW, X_COL, WHITE); // Stamp the X sign on the board
+
+			// Stamp the points, calculating the distance between the point column and the x column
+			stampBoard(intToAscii("" + currentPoints, X_COL - POINTS_COL), POINTS_ROW, POINTS_COL, BLUE); // Stamp the points
+			
+			// Stamp the mult, calculating the distance between the mult column and the right edge of the score board
+			stampBoard(intToAscii("" + currentMult, SCORE_BOARD_COL + SCORE_BOARD_WIDTH - 1 - MULT_COL), MULT_ROW, MULT_COL, DARK_RED); 
+			// Stamp the total score, considering the total width of the score box
+			stampBoard(intToAscii("" + currentScore, SCORE_BOX_WIDTH - 2), SCORE_ROW, SCORE_COL, YELLOW);
+			
+		}
+
+		private void printCardBack(int row, int col)
+		{
+			stampBoard(CARD_BACK, row, col, WHITE); // Stamp the card back on the board
 		}
 
 		public void printHandText()
 		{
-			clearScoreBoard(); // Clear the score box
+			eraseScoreBoard(); // Clear the score box
 			if (currentHandType.equalsIgnoreCase("Straight"))
 			{
 				stampBoard(STRAIGHT_ARRAY, 3, 10, BLUE); // Stamp the straight on the board
@@ -695,11 +751,6 @@ public class GameBoard
 			{
 				stampBoard(TWO_PAIR_ARRAY, 3, 10, LIME); // Stamp the two pair on the board
 			}
-		}
-
-		private void clearScoreBoard()
-		{
-			erase(SCORE_BOARD_ROW + 1, SCORE_BOARD_COL + 1, SCORE_BOARD_WIDTH - 2, SCORE_BOARD_HEIGHT - 2); // Clear the score box
 		}
 
 		/**
@@ -756,6 +807,16 @@ public class GameBoard
 		private void eraseHand()
 		{
 			erase(HAND_ROW -2, HAND_COL, HAND_CELL_WIDTH * 7, HAND_CELL_HEIGHT); // Clear the hand box
+		}
+
+		private void eraseScoreBoard()
+		{
+			erase(SCORE_BOARD_ROW + 1, SCORE_BOARD_COL + 1, SCORE_BOARD_WIDTH - 2, SCORE_BOARD_HEIGHT - 2); // Clear the score box
+		}
+
+		private void erasePlayBoard()
+		{
+			erase(SCORE_BOARD_ROW, HAND_COL, HAND_CELL_WIDTH * 7, SCORE_BOARD_HEIGHT); // Erase the entire space above the hand and to the right of the score board.
 		}
 
 
@@ -844,7 +905,7 @@ public class GameBoard
 					if (hand[i] != null && hand[i].getSelected()) // If the card in the hand is selected
 					{
 						eraseCard(hand, i); // Erase the card from the board
-						hand[i] = null; // Discard the selected card
+						hand[i] = null; // Remove the selected card
 						dealtCardsCount--; // Decrease number of cards dealt
 					}
 				}
@@ -866,20 +927,39 @@ public class GameBoard
 		 */
 		private void discard() throws InterruptedException
 		{
-			clearScoreBoard(); // Clear the score box
+			eraseScoreBoard(); // Clear the score box
 			currentHandType = ""; // Reset the hand type
 			printScoreBoard(); // Re-print the score box
+			
+			removeSelectedCards(); // Remove the selected cards from the 
 
-			removeSelectedCards(); // Remove the selected cards from the hand
-			printBoard(); // Print the board
+
+			printBoard(true); // Print the board and the hand
 			Thread.sleep(500); // Pause for half a second
-			dealHand(); // Fill empty spots in the hand
-			printBoard(); // Print the board
 
+			refillHand();
+			
+		}
+
+		private void refillHand() throws InterruptedException
+		{
+			for (int blankCard = 0; blankCard < hand.length; blankCard++)
+			{
+				if (hand[blankCard] == null)
+				{
+					printCardBack(CARD_ROW, CARD_COL + (blankCard * HAND_CELL_WIDTH)); // Print the card back
+				}
+			}
+
+			printBoard(false); // Print the board without the hand
+			Thread.sleep(500);
+
+			dealHand(); // Fill empty spots in the hand
+			printBoard(true); // Print the board and the hand again
 			
 			Thread.sleep(700); // Pause efore sorting
 			sortHand(sortType); // Sort
-			printBoard(); // Print the board
+			printBoard(true); // Print the board and the hand
 		}
 
 		/**
@@ -936,32 +1016,63 @@ public class GameBoard
 
 		}
 
-		private String[] intToAscii(String numberString)
+		/**
+		 * Takes an integer and the maximum amount of space that integer is allowed to occupy and returns ASCII art with preceding blank spaces to ensure the art is centered in its alotted area
+		 * @param numberString the integer to turn into ASCII art
+		 * @param maxWidth The width of the space the integer should be centered within
+		 * @return String array containing the ASCII art
+		 */
+		private String[] intToAscii(String numberString, int maxWidth)
 		{
-			char[] numberChars = numberString.toCharArray(); // Split the number into each of its digits
-			String[] asciiArray = new String[6]; // Create an array to hold the ascii art for each digit
+			char[] numberChars = numberString.toCharArray(); // Split the number into each of its digits as characters
+			
+			// Turn each of those characters into integers for easy use
+			int[] numberInts = new int[numberChars.length]; 
+			for (int numChar = 0; numChar < numberChars.length; numChar++)
+			{
+				numberInts[numChar] = Integer.parseInt("" + numberChars[numChar]);
+			}
 
-			if (numberChars.length == 1) // If the number is one digit
+			String[] asciiArray = new String[6]; // Create an array to hold the ascii art for each digit
+			String padding = " "; // Initialize the buffer string as a single blank space
+			int numDigits = numberChars.length; // This is the number of digits in the input integer
+			int inputWidth = 0; // This will hold the total width of the final ascii art
+
+			int longestLine; // Int to keep track of the longest line in each ascii digit (not necessary for our currently uniform ascii art but fixes potential issues for other ascii digits)
+
+			// Loop through each line of the ascii art for each digit, adding up the longest lines until we get the total length of the final ascii art
+			for (int digit = 0; digit < numDigits; digit++) // For each digit in the inputted number
+			{
+				longestLine = 0; // Reset the longest line for each digit
+				for (int line = 0; line < 6; line++) // For each line of ascii art for the current digit, check if it's the longest and update the longest if it is
+				{
+					if (NUMBERS_ARRAY[numberInts[digit]][line].length() > longestLine)
+					{
+						longestLine = NUMBERS_ARRAY[numberInts[digit]][line].length();
+					}
+				}
+				// Add to the total length of the final ascii art
+				inputWidth += longestLine;	
+			}
+
+			// Increase the padding given the maximum width we're printing the art in. This will add as much blank space as necessary to keep the digit centered no matter its length
+			padding = padding.repeat((maxWidth - inputWidth)/2);
+
+			// Assemble the final ascii art
+			for (int digit = 0; digit < numberChars.length; digit++)
 			{
 				for (int i = 0; i < 6; i++) // For each line of ascii art
 				{
-					asciiArray[i] = ""; // Initialize the ascii array
-					asciiArray[i] += "   " + NUMBERS_ARRAY[Integer.parseInt("" + numberChars[0])][i]; // Add each line to the array with spaces for alignment
-				}
-			}
-			else if (numberChars.length == 2)
-			{
-				for (int i = 0; i < 6; i++)
-				{
-					// Ints for first and second digits
-					int firstDigit = Integer.parseInt("" + numberChars[0]);
-					int secondDigit = Integer.parseInt("" + numberChars[1]);
 
-					// Add the lines of ascii art for both digits to the array
-					asciiArray[i] = ""; // Initialize the ascii array
-					asciiArray[i] += NUMBERS_ARRAY[firstDigit][i] + " " + NUMBERS_ARRAY[secondDigit][i];
-				}
+					if (digit == 0) // Only on the first digit
+					{
+						asciiArray[i] = padding;
+					}
+
+					asciiArray[i] += NUMBERS_ARRAY[numberInts[digit]][i]; // Add each line to the array with spaces for alignment
+				}	
 			}
+			
 			return asciiArray; // Return the ascii array
 			
 		}
@@ -1378,16 +1489,69 @@ public class GameBoard
 					System.out.println(playHand[i].toString()); 
 				}
 			}
-			System.out.println("Selected Cards:");
-			testPrintSelected(); // Print the selected cards for debugging
 			removeSelectedCards(); // Remove the selected cards from the hand
 			printCards(playHand);
-			printBoard(); // Print the board
+			printBoard(true); // Print the board
 
+			Thread.sleep(500);
+			scoreCards(playHand);
 
-			clearScoreBoard(); // Clear the score box
+			eraseScoreBoard(); // Clear the score box
 			currentHandType = ""; // Reset the hand type
 			printScoreBoard(); // Re-print the score box
+			erasePlayBoard(); // Erase all the played cards
+
+			printBoard(false); // Print the board with blank spaces still showing
+			Thread.sleep(500); // Pause
+
+			refillHand(); // Refill the hand (this handles the rest of the printing)
+
+		}
+
+		private void scoreCards(Card[] scoreArray) throws InterruptedException
+		{
+			// String arrays to hold the card points and multipliers
+			String[] cardPoints = new String[1];
+			String[] cardMult = new String[1];
+
+			int intPoints;
+			int intMult;
+
+			int pointsRow;
+			int pointsCol;
+
+			int multRow;
+			int multCol;
+
+			for (int card = 0; card < scoreArray.length; card++)
+			{
+				if (scoreArray[card] != null)
+				{
+					intPoints = scoreArray[card].getNumber(); // The card scores as high as its number
+					pointsRow = scoreArray[card].getRowCoord() - 1;
+					pointsCol = scoreArray[card].getColCoord() + 4;
+
+					cardPoints[0] = "+" + intPoints;
+					stampBoard(cardPoints, pointsRow, pointsCol, YELLOW);
+					currentPoints += intPoints;
+					currentScore += currentPoints;
+
+					// Clear and reprint the scoreboard to reflect points changes
+					eraseScoreBoard();
+					printScoreBoard();
+
+					printBoard(false); // Print the board without the hand just to be safe since the hand shouldn't change till after scoring
+					Thread.sleep(800); // Pause between scores
+				}
+			}
+
+			currentPoints = 0;
+			eraseScoreBoard(); // Clear the score box
+			currentHandType = ""; // Reset the hand type
+			printScoreBoard(); // Re-print the score box
+
+			
+
 		}
 
 
@@ -1402,11 +1566,11 @@ public class GameBoard
 			Scanner scanner = new Scanner(System.in);
 			this.initializeBoard();
 			this.shuffleDeck(); // Shuffle the deck
-			this.printBoard();
+			this.printBoard(true);
 			Thread.sleep(1000); // Sleep for 1 second
 			this.dealHand(); // Deal the hand
 			sortHand(sortType); // Sort the hand
-			this.printBoard();
+			this.printBoard(true);
 			while (contGame)
 			{
 				// We read if the initial string is empty before going any further
@@ -1438,25 +1602,21 @@ public class GameBoard
 							} 
 							else
 							{
-								String[] testString = new String[1];
-								testString[0] = "+2";
-								stampBoard(testString, HAND_ROW - 2, HAND_COL + 6, "\u001B[0m");
-
 								checkHandType(); // Check the hand type
 								printScoreBoard(); // Print the score board
-								this.printBoard(); // Display the board
+								this.printBoard(true); // Display the board
 								break;
 							}
 							
 						case 's':
 						sortType = 1;
 							this.sortHand(sortType); // Sort the hand by suit
-							this.printBoard(); // Display the board
+							this.printBoard(true); // Display the board
 							break;
 						case 'n':
 							sortType = 0;
 							this.sortHand(sortType); // Sort the hand by suit
-							this.printBoard(); // Display the board
+							this.printBoard(true); // Display the board
 							
 							break;
 						case 'q':
@@ -1495,6 +1655,21 @@ public class GameBoard
 					System.out.println(selectedCards[i].toString());
 				}
 				if (selectedCards[i] == null)
+				{
+					System.out.println("null");
+				}
+			}
+		}
+
+		private void testPrintHand()
+		{
+			for (int i = 0; i < hand.length; i++)
+			{
+				if (hand[i] != null)
+				{
+					System.out.println(hand[i].toString());
+				}
+				if (hand[i] == null)
 				{
 					System.out.println("null");
 				}
