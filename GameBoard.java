@@ -1857,6 +1857,7 @@ public class GameBoard
 
 							printBoard(false); // Print the board without the hand just to be safe since the hand shouldn't change till after scoring
 							Thread.sleep(800); // Pause between scores
+							break; // Break to avoid scoring twice
 						}
 					}
 					
@@ -1892,8 +1893,19 @@ public class GameBoard
 				}
 			}
 			
+			// update the final score for this hand
+			currentScore += currentPoints * currentMult;
+
+			// Clear and reprint the scoreboard to reflect points changes
+			eraseScoreBoard();
+			printScoreBoard();
+
+			printBoard(false);
+			Thread.sleep(500);
+
 
 			currentPoints = 0;
+			currentMult = 0;
 			eraseScoreBoard(); // Clear the score box
 			currentHandType = ""; // Reset the hand type
 			printScoreBoard(); // Re-print the score box
@@ -1929,9 +1941,8 @@ public class GameBoard
 			cardPoints[0] = "+" + intPoints;
 			stampBoard(cardPoints, pointsRow, pointsCol, YELLOW);
 
-			// Update the score and points
+			// Update the points
 			currentPoints += intPoints;
-			currentScore += currentPoints;
 
 			// Clear and reprint the scoreboard to reflect points changes
 			eraseScoreBoard();
