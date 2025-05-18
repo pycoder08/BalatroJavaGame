@@ -1,5 +1,7 @@
 import java.util.Scanner;
 
+import org.checkerframework.checker.units.qual.h;
+
 /**
  * Represents The game board
  * 
@@ -108,6 +110,8 @@ public class GameBoard
 		EMPTY_CARD[0] = EMPTY_CARD[1] = EMPTY_CARD[2] = EMPTY_CARD[3] = EMPTY_CARD[4] = EMPTY_CARD[5] = EMPTY_CARD[6] = "           ";
 	}
 
+	private static final String[] SUITS_ARRAY = {"Spades", "Hearts", "Diamonds", "Clubs"}; // Array of suits
+
 	private static final String[] CARD_BACK = new String[7];
 	{
 		CARD_BACK[0] = "┌─────────┐";
@@ -117,6 +121,17 @@ public class GameBoard
 		CARD_BACK[4] = "│# # # # #│";
 		CARD_BACK[5] = "│# # # # #│";
 		CARD_BACK[6] = "└─────────┘";
+	}
+
+	private static final String[] DASHED_CARD = new String[7];
+	{
+		DASHED_CARD[0] = "┌ - - - - ┐";
+		DASHED_CARD[1] = "│         │";
+		DASHED_CARD[2] = "│         │";
+		DASHED_CARD[3] = "│         │";
+		DASHED_CARD[4] = "│         │";
+		DASHED_CARD[5] = "│         │";
+		DASHED_CARD[6] = "└ - - - - ┘";
 	}
 
 	// Array to keep legend text
@@ -143,7 +158,18 @@ public class GameBoard
 		}
 	}
 
-	// Arrays to hold ascii art for different hand types
+	// Arrays to hold ascii art for different text
+
+	private static final String[] HELP_ARRAY = new String[6];
+	{
+		HELP_ARRAY[0] = " _   _ _____ _    ______ ";
+		HELP_ARRAY[1] = "| | | |  ___| |   | ___ \\";
+		HELP_ARRAY[2] = "| |_| | |__ | |   | |_/ /";
+		HELP_ARRAY[3] = "|  _  |  __|| |   |  __/ ";
+		HELP_ARRAY[4] = "| | | | |___| |___| |    ";
+		HELP_ARRAY[5] = "\\_| |_|____/\\_____|_|    ";
+	}
+
 
 	private static final String[] STRAIGHT_ARRAY = new String[8];
 	{
@@ -403,6 +429,10 @@ public class GameBoard
 	static int currentPoints = 0; // Int to keep track of the current points
 	static int currentMult = 1; // Int to keep track of the current multiplier
 	static int currentScore = 0; // Int to keep track of the overall score
+
+	static boolean viewingHelp = false; // Int for wheter the user is viewing the help page or not
+	static String[][] saveBoard; // Backup array to save the game board before we erase it
+	static String[][] saveColors; // Backup array for the colors on the board
 	
 	// Fill the deck with cards
 	{
@@ -698,12 +728,19 @@ public class GameBoard
 			stampBoard(X_ARRAY, X_ROW, X_COL, WHITE); // Stamp the X sign on the board
 
 			// Stamp the points, calculating the distance between the point column and the x column
-			stampBoard(intToAscii("" + currentPoints, X_COL - POINTS_COL), POINTS_ROW, POINTS_COL, BLUE); // Stamp the points
+			String[] pointsAscii = intToAscii("" + currentPoints); // Turn the points into ascii art
+			String[] centeredPointsAscii = centerAscii(pointsAscii, X_COL - POINTS_COL); // Center that ascii art within its given space
+			stampBoard(centeredPointsAscii, POINTS_ROW, POINTS_COL, BLUE); // Stamp the points
 			
 			// Stamp the mult, calculating the distance between the mult column and the right edge of the score board
-			stampBoard(intToAscii("" + currentMult, SCORE_BOARD_COL + SCORE_BOARD_WIDTH - 1 - MULT_COL), MULT_ROW, MULT_COL, DARK_RED); 
+			String[] multAscii = intToAscii("" + currentMult); // Turn the mult into ascii art
+			String[] centeredMultAscii = centerAscii(multAscii, SCORE_BOARD_COL + SCORE_BOARD_WIDTH - 1 - MULT_COL); // Center that ascii art within its given space
+			stampBoard(centeredMultAscii, MULT_ROW, MULT_COL, DARK_RED); // Stamp the mult
+
 			// Stamp the total score, considering the total width of the score box
-			stampBoard(intToAscii("" + currentScore, SCORE_BOX_WIDTH - 2), SCORE_ROW, SCORE_COL, YELLOW);
+			String[] scoreAscii = intToAscii("" + currentScore); // Turn the score into ascii art
+			String[] centeredScoreAscii = centerAscii(scoreAscii,SCORE_BOX_WIDTH - 2); // Center that ascii art within the score box
+			stampBoard(centeredScoreAscii, SCORE_ROW, SCORE_COL, YELLOW); // Stamp the score
 			
 		}
 
@@ -750,6 +787,157 @@ public class GameBoard
 			else if (currentHandType.equalsIgnoreCase("Two Pair"))
 			{
 				stampBoard(TWO_PAIR_ARRAY, 3, 10, LIME); // Stamp the two pair on the board
+			}
+		}
+
+		/**
+		 * Prints or removes the help screen to give useful information. Whether it appears or disappears depends on the viewingHelp static variable
+		 */
+		private void printHelp()
+		{
+			
+			if (!viewingHelp) // If the user is not currently looking at the help menu 
+			{
+				viewingHelp = true; // Update this value so the next time the user presses help it exits the menu
+				saveBoard = deepCopyBoard(board); // Deep copy the board to save it before we erase it
+				saveColors = deepCopyBoard(colors); // Deep copy the colors
+				erase(1, 1, COLS - 2, ROWS - 2); // Erase the board
+
+				// Print the help label in the top left
+
+				// Store the height and width in variables for easy editing
+				int helpHeight = 9;
+				int helpWidth = SCORE_BOARD_WIDTH + 16;
+
+				printBox(SCORE_BOARD_ROW, SCORE_BOARD_COL, helpHeight, helpWidth, PURPLE); // Recycle score board array constants for this box
+				String[] centeredHelp = centerAscii(HELP_ARRAY, helpWidth - 2); // New string[] to center the help text piggybacking off the score board array constants
+				stampBoard(centeredHelp, SCORE_BOARD_ROW + 1, SCORE_BOARD_COL + 1, PURPLE); // Stamp the help text
+
+				String[] helpHints = new String[6]; // New string array to hold text we print to the screen
+				helpHints[0] = "- Enter numbers 1 - 5 to select cards";
+				helpHints[1] = "- Select cards in one of the displayed patterns to score";
+				helpHints[2] = "- Enter 'p' when you're ready to play your hand and score points";
+				helpHints[3] = "- Score enough points to beat the blind";
+				helpHints[4] = "- You have a limited number of hands to play and discards to use";
+				helpHints[5] = "- You can score a straight + a flush at once to play a straight flush";
+
+				stampBoard(helpHints, SCORE_BOARD_ROW + helpHeight + 1, SCORE_BOARD_COL, WHITE); // Stamp instructions to the board
+
+				// Array to hold tips for each hand
+				String[] handTips = new String[6];
+				handTips[0] = "High card (scores the highest held card only):";
+				handTips[1] = "Straight (scores all the cards if they are in increasing order):";
+				handTips[2] = "Flush (Scores all the cards if they are all the same suit):";
+				handTips[3] = "(2, 3, 4) of a kind (scores the cards of matching rank):";
+				handTips[4] = "Two pair (scores the two pairs of matching ranks):";
+				handTips[5] = "Full house (scores a triple and a pair present together):";
+
+				// Rows and cols to print the hands in
+				int highRow = 21;
+				int highCol = 5;
+
+				int straightRow = highRow + 9;
+				int straightCol = highCol;
+
+				int flushRow = 3;
+				int flushCol = 80;
+
+				int kindRow = flushRow + 9;
+				int kindCol = flushCol;
+
+				int pairRow = kindRow + 9;
+				int pairCol = kindCol;
+
+				int houseRow = pairRow + 9;
+				int houseCol = pairCol;
+
+				// Arrays to represent the hands
+				Card[][] handsArray = new Card [6][];
+				handsArray[0] = new Card[1]; // High card
+				handsArray[1] = new Card[5]; // Straight
+				handsArray[2] = new Card[5]; // Flush
+				handsArray[3] = new Card[4]; // __ Of a kind
+				handsArray[4] = new Card[4]; // Two pair
+				handsArray[5] = new Card[5]; // Full house
+
+				//High card
+				handsArray[0][0] = new Card(1, "spades", false, highRow, highCol);
+				// Straight
+				for (int straightCard = 0; straightCard < 5; straightCard++) // Initialize a line of cards of increasing rank and random suit
+				{
+					handsArray[1][straightCard] = new Card(straightCard + 1, SUITS_ARRAY[new java.util.Random().nextInt(SUITS_ARRAY.length)], false, straightRow, straightCol + straightCard * HAND_CELL_WIDTH);
+				}
+				// Flush
+				for (int flushCard = 0; flushCard < 5; flushCard++) // Initialize a row of cards of random rank and suit hearts
+				{
+					handsArray[2][flushCard] = new Card(new java.util.Random().nextInt(12) + 1, "hearts", false, flushRow, flushCol + flushCard * HAND_CELL_WIDTH);
+				}
+				// __ of a kind
+				for (int kindCard = 0; kindCard < handsArray[3].length; kindCard++) // Initialize a row of 4 cards with matching rank and random suit
+				{
+					handsArray[3][kindCard] = new Card(1, SUITS_ARRAY[new java.util.Random().nextInt(SUITS_ARRAY.length)], false, kindRow, kindCol + kindCard * HAND_CELL_WIDTH);
+				}
+				// Two pair
+				for (int pairCard = 0; pairCard < handsArray[4].length; pairCard++) // Initialize a row of two pairs of cards that have matching rank, random suits
+				{
+					int value = pairCard / 2; // Using integer division, this will give 0 on the first two passes and 1 on the next two, perfect for making two pairs of cards
+					handsArray[4][pairCard] = new Card(value + 1, SUITS_ARRAY[new java.util.Random().nextInt(SUITS_ARRAY.length)], false, pairRow, pairCol + pairCard * HAND_CELL_WIDTH);
+				}
+				// Full house
+				for (int houseCard = 0; houseCard < handsArray[5].length; houseCard++) 
+				{
+					if (houseCard < 3) // For the first three cards, initialize a row of 3 cards with matching rank and random suit
+					{
+						handsArray[5][houseCard] = new Card(1, SUITS_ARRAY[new java.util.Random().nextInt(SUITS_ARRAY.length)], false, houseRow, houseCol + houseCard * HAND_CELL_WIDTH);
+					}
+					else // For the last two, initizalize a pair of random suit
+					{
+						handsArray[5][houseCard] = new Card(10, SUITS_ARRAY[new java.util.Random().nextInt(SUITS_ARRAY.length)], false, houseRow, houseCol + houseCard * HAND_CELL_WIDTH);
+					}
+					
+				}
+
+				// Loop through each hand and print it
+				for (int handIdx = 0; handIdx < handsArray.length; handIdx++)
+				{
+					printHandTip(handsArray[handIdx], handTips[handIdx]);
+				}
+
+				printBoard(false);
+			}
+			else
+			{
+				viewingHelp = false; // Stop viewing the board
+				board = deepCopyBoard(saveBoard); // Reverse-copy the saved board to the current one
+				colors = deepCopyBoard(saveColors); // Restore the colors
+				printBoard(true); // Print the board
+			}
+			
+		}
+
+		/**
+		 * Takes an array of cards, coordinates to print them, and a tip message, and prints out a guide for the scoring hand with any empty cards represented as dashed lines
+		 * @param cardArray the card array to print
+		 * @param tip the stringtip to display
+		 */
+		private void printHandTip(Card[] cardArray, String tip)
+		{
+			Card[] tipCards = new Card[5]; // New array to be filled with contents of input array (possibility for partially filled arrays)
+
+			String[] tipString = new String[1];
+			tipString[0] = tip;
+
+			System.arraycopy(cardArray, 0, tipCards, 0, cardArray.length); // Copy the input array into the new tipCards array
+			printCards(tipCards); // Print the cards
+			stampBoard(tipString, cardArray[0].getRowCoord() - 1, cardArray[0].getColCoord(), WHITE); // Stamp the tip message above the cards
+
+			// Print dashed card outlines for the rest of the hand representation
+			for (int dashed = 0; dashed < 5; dashed++)
+			{
+				if (tipCards[dashed] == null)
+				{
+					stampBoard(DASHED_CARD, tipCards[0].getRowCoord(), tipCards[0].getColCoord() + HAND_CELL_WIDTH * dashed, WHITE);
+				}
 			}
 		}
 
@@ -968,8 +1156,6 @@ public class GameBoard
 		 */
 		public void sortHand(int sortKind)
 		{
-			String[] suits = {"Spades", "Hearts", "Diamonds", "Clubs"}; // Array of suits to be used for sorting
-
 			if (sortKind == 0) // Sort by number
 			{
 				// We loop through the hand array, swapping each card with the smallest subsequent card using the indexOfMin method
@@ -989,13 +1175,13 @@ public class GameBoard
 			{
 				int currentSuitIndex = 0;
 
-				for (int suitIndex = 0; suitIndex < suits.length; suitIndex++) // For each suit in the suits array
+				for (int suitIndex = 0; suitIndex < SUITS_ARRAY.length; suitIndex++) // For each suit in the suits array
 				{
 					int nextSuitIndex;
-					while (indexOfSuit(hand, currentSuitIndex, suits[suitIndex]) != -1 && currentSuitIndex < hand.length - 1) // While there are upcoming cards of the suit in the hand and we haven't reached the end of the hand
+					while (indexOfSuit(hand, currentSuitIndex, SUITS_ARRAY[suitIndex]) != -1 && currentSuitIndex < hand.length - 1) // While there are upcoming cards of the suit in the hand and we haven't reached the end of the hand
 					{
-						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, suits[suitIndex]); // Get the index of the next card of the proper suit
-						if (hand[currentSuitIndex] != null && !hand[currentSuitIndex].getSuit().equalsIgnoreCase(suits[suitIndex])) // If the suit of the card is not the right suit and isn't null
+						nextSuitIndex = indexOfSuit(hand, currentSuitIndex, SUITS_ARRAY[suitIndex]); // Get the index of the next card of the proper suit
+						if (hand[currentSuitIndex] != null && !hand[currentSuitIndex].getSuit().equalsIgnoreCase(SUITS_ARRAY[suitIndex])) // If the suit of the card is not the right suit and isn't null
 						{
 							swapIndeces(hand, currentSuitIndex, nextSuitIndex);
 							currentSuitIndex++; // Update the current suit index to be the next card
@@ -1018,11 +1204,10 @@ public class GameBoard
 
 		/**
 		 * Takes an integer and the maximum amount of space that integer is allowed to occupy and returns ASCII art with preceding blank spaces to ensure the art is centered in its alotted area
-		 * @param numberString the integer to turn into ASCII art
-		 * @param maxWidth The width of the space the integer should be centered within
+		 * @param numberString a string representing the integer to turn into ASCII art
 		 * @return String array containing the ASCII art
 		 */
-		private String[] intToAscii(String numberString, int maxWidth)
+		private String[] intToAscii(String numberString)
 		{
 			char[] numberChars = numberString.toCharArray(); // Split the number into each of its digits as characters
 			
@@ -1034,47 +1219,53 @@ public class GameBoard
 			}
 
 			String[] asciiArray = new String[6]; // Create an array to hold the ascii art for each digit
-			String padding = " "; // Initialize the buffer string as a single blank space
-			int numDigits = numberChars.length; // This is the number of digits in the input integer
-			int inputWidth = 0; // This will hold the total width of the final ascii art
-
-			int longestLine; // Int to keep track of the longest line in each ascii digit (not necessary for our currently uniform ascii art but fixes potential issues for other ascii digits)
-
-			// Loop through each line of the ascii art for each digit, adding up the longest lines until we get the total length of the final ascii art
-			for (int digit = 0; digit < numDigits; digit++) // For each digit in the inputted number
-			{
-				longestLine = 0; // Reset the longest line for each digit
-				for (int line = 0; line < 6; line++) // For each line of ascii art for the current digit, check if it's the longest and update the longest if it is
-				{
-					if (NUMBERS_ARRAY[numberInts[digit]][line].length() > longestLine)
-					{
-						longestLine = NUMBERS_ARRAY[numberInts[digit]][line].length();
-					}
-				}
-				// Add to the total length of the final ascii art
-				inputWidth += longestLine;	
-			}
-
-			// Increase the padding given the maximum width we're printing the art in. This will add as much blank space as necessary to keep the digit centered no matter its length
-			padding = padding.repeat((maxWidth - inputWidth)/2);
 
 			// Assemble the final ascii art
 			for (int digit = 0; digit < numberChars.length; digit++)
 			{
 				for (int i = 0; i < 6; i++) // For each line of ascii art
 				{
-
-					if (digit == 0) // Only on the first digit
+					if (digit == 0)
 					{
-						asciiArray[i] = padding;
+						asciiArray[i] = ""; // Initialize each line on the first pass to ensure no null values before adding to it
 					}
-
-					asciiArray[i] += NUMBERS_ARRAY[numberInts[digit]][i]; // Add each line to the array with spaces for alignment
+					asciiArray[i] += NUMBERS_ARRAY[numberInts[digit]][i]; // Add each line to the array
 				}	
 			}
 			
 			return asciiArray; // Return the ascii array
 			
+		}
+
+		private String[] centerAscii(String[] asciiArray, int maxWidth)
+		{
+			String[] outputArray = new String[asciiArray.length];
+			String padding = " "; // Initialize the buffer string as a single blank space
+			int inputWidth = 0; // This will hold the total width of the final ascii art
+			int longestLine = 0; // Int to keep track of the longest line in each ascii digit (not necessary for our currently uniform ascii art but fixes potential issues for other ascii digits)
+
+			for (int line = 0; line < 6; line++) // For each line of ascii art, check if it's the longest and update the longest if it is
+				{
+					if (asciiArray[line].length() > longestLine)
+					{
+						longestLine = asciiArray[line].length();
+					}
+				}
+				// Add to the total length of the final ascii art
+				inputWidth += longestLine;	
+
+			// Increase the padding given the maximum width we're printing the art in. This will add as much blank space as necessary to keep the digit centered no matter its length
+			padding = padding.repeat((maxWidth - inputWidth)/2);
+
+			// Assemble the final ascii art
+			for (int line = 0; line < 6; line++) // For each line of ascii art
+			{
+				outputArray[line] = padding; // Add the padding first
+				outputArray[line] += asciiArray[line]; // Add each line of ascii art on top of the alignment spaces
+			}	
+
+			return outputArray; // Return centered ascii art
+
 		}
 
 		/**** Array Methods ****/
@@ -1190,6 +1381,29 @@ public class GameBoard
 					break;
 				}
 			}
+		}
+
+		/**
+		 * Deep copies a source String[][] array into a target String array.
+		 * @param source the original array to copy from
+		 * @return a new deep-copied array
+		 */
+		private static String[][] deepCopyBoard(String[][] source) 
+		{
+			int rows = source.length;
+			int cols = source[0].length;
+			String[][] copy = new String[rows][cols];
+
+			// Add each cell by looping through the columns and rows
+			for (int row = 0; row < rows; row++) 
+			{
+				for (int col = 0; col < cols; col++) 
+				{
+					copy[row][col] = source[row][col];
+				}
+			}
+
+			return copy;
 		}
 
 
@@ -1629,6 +1843,9 @@ public class GameBoard
 						case 'p':
 							this.playHand(); // Play the hand
 							break;
+						case 'h':
+							printHelp();
+							break;
 						default:
 							System.out.println("Please enter a valid input");
 							break;
@@ -1673,6 +1890,14 @@ public class GameBoard
 				{
 					System.out.println("null");
 				}
+			}
+		}
+
+		private void testPrintStringArray(String[] array)
+		{
+			for (int line = 0; line < array.length; line++)
+			{
+				System.out.println(array[line]);
 			}
 		}
 
