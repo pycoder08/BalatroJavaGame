@@ -89,6 +89,34 @@ public class GameBoard
 	private static final int SCORE_ROW = SCORE_BOX_ROW + 1;
 	private static final int SCORE_COL = SCORE_BOARD_COL + 3;
 
+	// Constants for how much a hand scores
+	private static final int STRAIGHT_POINTS = 30;
+	private static final int STRAIGHT_MULT = 4;
+
+	private static final int FLUSH_POINTS = 35;
+	private static final int FLUSH_MULT = 4;
+
+	private static final int STRAIGHT_FLUSH_POINTS = 100;
+	private static final int STRAIGHT_FLUSH_MULT = 8;
+
+	private static final int HIGH_POINTS = 5;
+	private static final int HIGH_MULT = 1;
+
+	private static final int TWO_POINTS = 10;
+	private static final int TWO_MULT = 2;
+
+	private static final int THREE_POINTS = 30;
+	private static final int THREE_MULT = 3;
+
+	private static final int FOUR_POINTS = 60;
+	private static final int FOUR_MULT = 7;
+
+	private static final int PAIR_POINTS = 20;
+	private static final int PAIR_MULT = 2;
+
+	private static final int HOUSE_POINTS = 40;
+	private static final int HOUSE_MULT = 4;
+
 	// Color codes
 	public static final String RESET  = "\u001B[0m";
 	public static final String BLACK  = "\u001B[30m";
@@ -430,9 +458,15 @@ public class GameBoard
 	static int currentMult = 1; // Int to keep track of the current multiplier
 	static int currentScore = 0; // Int to keep track of the overall score
 
+	static int[] targetNum = new int[2]; // Int used for scoring hands where only certain cards should count. The second value is only used for two pair
+	static int targetNumLength = 0; // Since targetNum can be partially filled we need a var to keep track of its length
+
+	// variables related to printHelp() that need to be accessible from across the class to persist between method calls
 	static boolean viewingHelp = false; // Int for wheter the user is viewing the help page or not
 	static String[][] saveBoard; // Backup array to save the game board before we erase it
 	static String[][] saveColors; // Backup array for the colors on the board
+
+
 	
 	// Fill the deck with cards
 	{
@@ -1063,6 +1097,10 @@ public class GameBoard
 				hand[cardIndex].setRowCoord(CARD_ROW - 2); // Set the row coordinate of the card to be above the hand
 				appendCard(selectedCards, hand[cardIndex]); // Add the card to the selected cards array
 				selectedCardsCount++; // Increase the number of selected cards
+
+				//Erase the scoreboard and reprint it to update the score relating to the hand
+				eraseScoreBoard();
+				printScoreBoard();
 			}
 			else if (hand[cardIndex] != null && !hand[cardIndex].getSelected() && selectedCardsCount >= 5) // If the card is not selected and 5 cards are already selected
 			{
@@ -1076,6 +1114,10 @@ public class GameBoard
 				hand[cardIndex].setSelected(false); // Toggle the selection status to be false
 				hand[cardIndex].setRowCoord(CARD_ROW); // Set the row coordinate of the card back to the hand
 				printHandGrid(); // Reprtint the hand grid to fix the edge
+
+				//Erase the scoreboard and reprint it to update the score relating to the hand
+				eraseScoreBoard();
+				printScoreBoard();
 			}
 			return (true); // Return true if the card was successfully selected
 		}
@@ -1384,6 +1426,35 @@ public class GameBoard
 		}
 
 		/**
+		 * Appends an int to the first empty slot (0) in the given int array.
+		 * @param intArray The array to which the int will be appended.
+		 * @param value The int value to be appended.
+		 */
+		public void appendInt(int[] intArray, int value)
+		{
+			for (int i = 0; i < intArray.length; i++)
+			{
+				if (intArray[i] == 0)
+				{
+					intArray[i] = value; // Add the value to the first empty slot in the array
+					break;
+				}
+			}
+		}
+
+		/**
+		 * Sets each item in an integer array to 0
+		 * @param intArray The array to erase
+		 */
+		public void eraseInt(int[] intArray)
+		{
+			for (int val = 0; val < intArray.length; val++)
+			{
+				intArray[val] = 0; // Set each item in intArray to 0
+			}
+		}
+
+		/**
 		 * Deep copies a source String[][] array into a target String array.
 		 * @param source the original array to copy from
 		 * @return a new deep-copied array
@@ -1404,6 +1475,24 @@ public class GameBoard
 			}
 
 			return copy;
+		}
+
+		/**
+		 * Returns the rank of the highest card in the input array
+		 * @param inputArray The input array to analyze
+		 * @return
+		 */
+		private int returnHighestCard(Card[] inputArray)
+		{
+		int highest = 0; // Int to keep track of the highest rank of card
+			for (int card = 0; card < inputArray.length; card++)// For every card we're scoring
+			{
+				if (inputArray[card] != null && inputArray[card].getNumber() > highest)
+				{
+					highest = inputArray[card].getNumber(); // Update highest number so far
+				}
+			}
+			return highest;
 		}
 
 
@@ -1523,6 +1612,10 @@ public class GameBoard
 		 */
 		public int checkForKind()
 		{
+
+			eraseInt(targetNum); // Reset the targetNum array to 0s
+			targetNumLength = 0; // Reset the length
+
 			int modeNum = 0; // Int for the loop logic
 			boolean threeFound = false; // Boolean for finding full house
 			int twosFound = 0; // Int for finding full house and two pair
@@ -1545,11 +1638,14 @@ public class GameBoard
 					// If we find a card that appears 2 or 3 times, update our booleans accordingly
 					if (selectedFrequency[currentNum] == 2)
 					{
+						appendInt(targetNum, currentNum + 1); // Add the rank of the pair we just found to targetNum for scoring two of a kind and two pairs 
+						targetNumLength++; // Increase the length of targetNum
 						twosFound++; // Increase the number of pairs found
 					}
 					if (selectedFrequency[currentNum] == 3)
 					{
-						threeFound = true;
+						//appendInt(targetNum, currentNum + 1); // Add the rank of the triple we just found to targetNum for scoring 3 of a kind 
+						threeFound = true; // Set threeFound to true fo finding full houses
 					}
 				
 				}
@@ -1564,6 +1660,8 @@ public class GameBoard
 				}
 				else
 				{
+					appendInt(targetNum, modeNum + 1); // Only cards of the same rank as the most common one should score, and we update this var accordingly. Note this doesn't work for high card, which we account for seperately
+					targetNumLength++; // Increase the length of targetNum
 					return selectedFrequency[modeNum]; // Return how many times the most frequent card appears 
 				}
 				
@@ -1639,42 +1737,62 @@ public class GameBoard
 			if (checkForStraightFlush()) 
 			{
 				currentHandType = "Straight Flush";
+				currentPoints = STRAIGHT_FLUSH_POINTS;
+				currentMult = STRAIGHT_FLUSH_MULT;
 			} 
 			else if (checkForFourOfAKind()) 
 			{
 				currentHandType = "Four of a Kind";
+				currentPoints = FOUR_POINTS;
+				currentMult = FOUR_MULT;
 			} 
 			else if (checkForFullHouse()) 
 			{
 				currentHandType = "Full House";
+				currentPoints = HOUSE_POINTS;
+				currentMult = HOUSE_MULT;
 			} 
 			else if (checkForFlush()) 
 			{
 				currentHandType = "Flush";
+				currentPoints = FLUSH_POINTS;
+				currentMult = FLUSH_MULT;
 			} 
 			else if (checkForStraight()) 
 			{
 				currentHandType = "Straight";
+				currentPoints = STRAIGHT_POINTS;
+				currentMult = STRAIGHT_MULT;
 			} 
 			else if (checkForThreeOfAKind()) 
 			{
 				currentHandType = "Three of a Kind";
+				currentPoints = THREE_POINTS;
+				currentMult = THREE_MULT;
 			} 
 			else if (checkForTwoPair()) 
 			{
 				currentHandType = "Two Pair";
+				currentPoints = TWO_POINTS;
+				currentMult = TWO_MULT;
 			} 
 			else if (checkForTwoOfAKind()) 
 			{
 				currentHandType = "Two of a Kind";
+				currentPoints = PAIR_POINTS;
+				currentMult = PAIR_MULT;
 			} 
 			else if (checkForHighCard()) 
 			{
 				currentHandType = "High Card";
+				currentPoints = HIGH_POINTS;
+				currentMult = HIGH_MULT;
 			} 
 			else 
 			{
 				currentHandType = "";
+				currentPoints = 0;
+				currentMult = 1;
 			}
 
 			return currentHandType;
@@ -1724,49 +1842,102 @@ public class GameBoard
 
 		private void scoreCards(Card[] scoreArray) throws InterruptedException
 		{
-			// String arrays to hold the card points and multipliers
-			String[] cardPoints = new String[1];
-			String[] cardMult = new String[1];
-
-			int intPoints;
-			int intMult;
-
-			int pointsRow;
-			int pointsCol;
-
-			int multRow;
-			int multCol;
-
-			for (int card = 0; card < scoreArray.length; card++)
+			// If the hand type is high card, 2-4 of a kind, or two pair we only score cards of a certain rank as determined by targetNum
+			if (currentHandType.equalsIgnoreCase("Two of a kind") || currentHandType.equalsIgnoreCase("Three of a kind")  || currentHandType.equalsIgnoreCase("Four of a kind") || currentHandType.equalsIgnoreCase("Two pair"))
 			{
-				if (scoreArray[card] != null)
+				for (int card = 0; card < scoreArray.length; card++) // For each card we're scorring
 				{
-					intPoints = scoreArray[card].getNumber(); // The card scores as high as its number
-					pointsRow = scoreArray[card].getRowCoord() - 1;
-					pointsCol = scoreArray[card].getColCoord() + 4;
+					for (int target = 0; target < targetNumLength; target++) // For every rank we should be scoring
+					{
+						System.out.println(targetNumLength);
+						System.out.println(targetNum[target]);
+						if (scoreArray[card] != null && scoreArray[card].getNumber() == targetNum[target]) // If the card is of the right rank 
+						{
+							scoreCard(scoreArray[card]); // Score the card
 
-					cardPoints[0] = "+" + intPoints;
-					stampBoard(cardPoints, pointsRow, pointsCol, YELLOW);
-					currentPoints += intPoints;
-					currentScore += currentPoints;
-
-					// Clear and reprint the scoreboard to reflect points changes
-					eraseScoreBoard();
-					printScoreBoard();
-
-					printBoard(false); // Print the board without the hand just to be safe since the hand shouldn't change till after scoring
-					Thread.sleep(800); // Pause between scores
+							printBoard(false); // Print the board without the hand just to be safe since the hand shouldn't change till after scoring
+							Thread.sleep(800); // Pause between scores
+						}
+					}
+					
+				}
+				eraseInt(targetNum); // Reset targetNum to be 0 for the next time we score cards
+				targetNumLength = 0; // Reset the length of targetNum
+			}
+			else if (currentHandType.equalsIgnoreCase("High card")) // For high card specifically
+			{
+				int highest = returnHighestCard(scoreArray); // Int to keep track of the highest rank of card
+				
+				for (int card = 0; card < scoreArray.length; card++)
+				{
+					if (scoreArray[card] != null && scoreArray[card].getNumber() == highest) // If the card is the highest in the hand 
+					{
+						scoreCard(scoreArray[card]);
+						printBoard(false); // Print the board without the hand just to be safe since the hand shouldn't change till after scoring
+						Thread.sleep(800); // Pause between moving on
+					}
 				}
 			}
+			else // For every other possible hand
+			{
+				for (int card = 0; card < scoreArray.length; card++) // For every card to score
+				{
+					if (scoreArray[card] != null) // As long as it's not empty
+					{
+						scoreCard(scoreArray[card]); // Score the card
+
+						printBoard(false); // Print the board without the hand just to be safe since the hand shouldn't change till after scoring
+						Thread.sleep(800); // Pause between scores
+					}
+				}
+			}
+			
 
 			currentPoints = 0;
 			eraseScoreBoard(); // Clear the score box
 			currentHandType = ""; // Reset the hand type
 			printScoreBoard(); // Re-print the score box
-
-			
-
 		}
+
+		/**
+		 * Scores a single card and adds the points above it. Does not print the board to the terminal
+		 * @param inputCard The card to score
+		 */
+		private void scoreCard(Card inputCard)
+		{
+			// String arrays to hold the card points and multipliers
+			String[] cardPoints = new String[1];
+			String[] cardMult = new String[1];
+
+			int intPoints;
+			int intMult; // Currently unused, left in for potential future features
+
+			int pointsRow;
+			int pointsCol;
+
+			// Cards currently don't give mult in this version of the game
+			int multRow;
+			int multCol;
+
+			intPoints = inputCard.getNumber(); // The card scores as high as its number
+
+			// Define where to print the points
+			pointsRow = inputCard.getRowCoord() - 1;
+			pointsCol = inputCard.getColCoord() + 4;
+
+			// Print the point addition sign
+			cardPoints[0] = "+" + intPoints;
+			stampBoard(cardPoints, pointsRow, pointsCol, YELLOW);
+
+			// Update the score and points
+			currentPoints += intPoints;
+			currentScore += currentPoints;
+
+			// Clear and reprint the scoreboard to reflect points changes
+			eraseScoreBoard();
+			printScoreBoard();
+		}
+
 
 
 
