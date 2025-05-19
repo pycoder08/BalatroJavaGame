@@ -1,7 +1,5 @@
 import java.util.Scanner;
 
-import org.checkerframework.checker.units.qual.h;
-
 /**
  * Represents The game board
  * 
@@ -89,6 +87,17 @@ public class GameBoard
 	private static final int SCORE_ROW = SCORE_BOX_ROW + 1;
 	private static final int SCORE_COL = SCORE_BOARD_COL + 3;
 
+	private static final int WIN_BOX_HEIGHT = 9;
+	private static final int WIN_BOX_WIDTH = 50;
+	private static final int WIN_BOX_ROW = (ROWS/2) - (WIN_BOX_HEIGHT/2);
+	private static final int WIN_BOX_COL = COLS/2 - WIN_BOX_WIDTH/2;
+
+	// Constants for the goal score box
+	private static final int GOAL_ROW = SCORE_BOARD_ROW;
+	private static final int GOAL_COL = 120;
+	private static final int GOAL_WIDTH = 40;
+	private static final int GOAL_HEIGHT = 9;
+
 	// Constants for how much a hand scores
 	private static final int STRAIGHT_POINTS = 30;
 	private static final int STRAIGHT_MULT = 4;
@@ -116,6 +125,13 @@ public class GameBoard
 
 	private static final int HOUSE_POINTS = 40;
 	private static final int HOUSE_MULT = 4;
+
+	// Score goals
+	private static final int LEVEL_ONE_GOAL = 250;
+	private static final int LEVEL_TWO_GOAL = 400;
+	private static final int LEVEL_THREE_GOAL = 750;
+	private static final int LEVEL_FOUR_GOAL = 1500;
+	private static final int LEVEL_FIVE_GOAL = 2000;
 
 	// Color codes
 	public static final String RESET  = "\u001B[0m";
@@ -440,6 +456,28 @@ public class GameBoard
 		X_ARRAY[3] = "/_/ \\_\\";
 	}
 
+	private static final String[] WIN_ARRAY = new String[6];
+	{
+		WIN_ARRAY[0] = " _    _ _____ _   _ _ ";
+		WIN_ARRAY[1] = "| |  | |_   _| \\ | | |";
+		WIN_ARRAY[2] = "| |  | | | | |  \\| | |";
+		WIN_ARRAY[3] = "| |/\\| | | | | . ` | |";
+		WIN_ARRAY[4] = "\\  /\\  /_| |_| |\\  |_|";
+		WIN_ARRAY[5] = " \\/  \\/ \\___/\\_| \\_(_)";
+	}
+
+	private static final String[] FAIL_ARRAY = new String[6];
+	{
+		FAIL_ARRAY[0] = "______ ___  _____ _     ";
+		FAIL_ARRAY[1] = "|  ___/ _ \\|_   _| |    ";
+		FAIL_ARRAY[2] = "| |_ / /_\\ \\ | | | |    ";
+		FAIL_ARRAY[3] = "|  _||  _  | | | | |    ";
+		FAIL_ARRAY[4] = "| |  | | | |_| |_| |____";
+		FAIL_ARRAY[5] = "\\_|  \\_| |_/\\___/\\_____/"; 
+	}
+
+
+
 
 
 	/***** STATIC VARIABLES *****/
@@ -465,6 +503,13 @@ public class GameBoard
 	static boolean viewingHelp = false; // Int for wheter the user is viewing the help page or not
 	static String[][] saveBoard; // Backup array to save the game board before we erase it
 	static String[][] saveColors; // Backup array for the colors on the board
+
+	static int deckLength = 52; // Int for how big the deck is
+	static int currentGoal; // Int for the current goal to reach
+	static int currentLevel = 1; // Int to keep track of the current level
+
+	static int hands = 4; // number of hands you have left
+	static int discards = 4; // Number of discards you have left
 
 
 	
@@ -498,7 +543,7 @@ public class GameBoard
 	public GameBoard()
 	{
 		// Initialize the game board with borders and empty spaces
-		initializeBoard();
+		//initializeBoard();
 		for (int i = 0; i < hand.length; i++)
 		{
 			hand[i] = null; // Initialize the hannd with null values
@@ -512,7 +557,7 @@ public class GameBoard
 	public GameBoard(Card[] hand)
 	{
 		this.hand = hand; // Initialize the hand with the provided array of cards
-		initializeBoard(); // Initialize the game board with borders and empty spaces
+		//initializeBoard(); // Initialize the game board with borders and empty spaces
 	}
 
 	/**
@@ -522,7 +567,7 @@ public class GameBoard
 	public GameBoard(GameBoard other)
 	{
 		this.hand = other.hand; // Copy the hand from the other GameBoard object
-		initializeBoard(); // Initialize the game board with borders and empty spaces
+		//initializeBoard(); // Initialize the game board with borders and empty spaces
 	}
 
 	/***** ACCESSORS *****/
@@ -585,8 +630,12 @@ public class GameBoard
 	/**
 	 * Initializes the game board with borders and empty spaces.
 	 */
-	public void initializeBoard()
+	public void initializeBoard() throws InterruptedException
 	{
+		// Reset discards and hands
+		discards = 4;
+		hands = 4;
+
 		// Add the corner symbols
 		board[0][0] = "┌";
 		board[0][COLS - 1] = "┐";
@@ -598,23 +647,46 @@ public class GameBoard
 		{
 			for (int c = 0; c < COLS; c++)
 			{
-				if (board[r][c] == null)
-				{
-					board[r][c] = " ";
-				}
+				board[r][c] = " ";
 			}
 		}
 		printBox(0,0, ROWS, COLS, WHITE); // Draw the outer border of the board
+
+		updateGoal(); // Update the target score
+		printHandDisc(); // Print the hand and discard symbols
+
+		// Print the current goal centered in a box in the top right
+		printBox(GOAL_ROW, GOAL_COL, GOAL_HEIGHT, GOAL_WIDTH, ORANGE);
+		String[] goalAscii = intToAscii("" + currentGoal);
+		String[] centeredGoal = centerAscii(goalAscii, GOAL_WIDTH - 2);
+		stampBoard(centeredGoal, GOAL_ROW + 1, GOAL_COL + 1, ORANGE);
+
 		printScoreBoard(); // Draw the score board
 		printLegend(); // Draw the legend box
 		printCardBack(DECK_ROW, DECK_COL); // Draw deck symbol
+
+		clearHand(); // Clear the hand
+		dealtCardsCount = 0; // Rest the number of dealt cards
 		printHandGrid(); // Draw the hand box
+
+		
+		currentScore = 0; // Reset the current score
+		eraseScoreBoard(); // Erase the score board
+		printScoreBoard(); //Reprint the score board
 
 		// Print number labels
 		for (int r = 0; r < 7; r++)
 		{
 			board[HAND_ROW + 9][HAND_COL + 7 + r * HAND_CELL_WIDTH] = "" + (r+1);
 		}
+
+		fillDeck(); // Fill the deck
+		shuffleDeck(); // Shuffle the deck
+		printBoard(true);
+		Thread.sleep(1000); // Sleep for 1 second
+		dealHand(); // Deal the hand
+		sortHand(sortType); // Sort the hand
+		printBoard(true); // Print the board and continue the game
 
 	}
 
@@ -669,8 +741,23 @@ public class GameBoard
 			}
 			sb.append("\n"); // Add a new line after every line
 		}
-		
+		printHandDisc(); // Print the hand and discard symbols
 		System.out.println(sb.toString()); // Print entire board in one go to avoid flickering
+	}
+
+	/**
+	 * Prints the current hands and discards to the board under the deck symbol
+	 */
+	private void printHandDisc()
+	{
+		String[] handStrArray = new String[1];
+		handStrArray[0] = "Hands:    " + hands;
+
+		String[] discStrArray = new String[1];
+		discStrArray[0] = "Discards: " + discards;
+
+		stampBoard(handStrArray, DECK_ROW + 7, DECK_COL, BLUE);
+		stampBoard(discStrArray, DECK_ROW + 8, DECK_COL, RED);
 	}
 
 	/**
@@ -937,6 +1024,10 @@ public class GameBoard
 					printHandTip(handsArray[handIdx], handTips[handIdx]);
 				}
 
+				String[] backString = new String[1];
+				backString[0] = "Enter 'h' to go back to the game";
+				stampBoard(backString, ROWS - 2, 2, YELLOW);
+
 				printBoard(false);
 			}
 			else
@@ -1038,7 +1129,7 @@ public class GameBoard
 
 		private void erasePlayBoard()
 		{
-			erase(SCORE_BOARD_ROW, HAND_COL, HAND_CELL_WIDTH * 7, SCORE_BOARD_HEIGHT); // Erase the entire space above the hand and to the right of the score board.
+			erase(SCORE_BOX_ROW, HAND_COL, COLS - HAND_COL - 1, SCORE_BOARD_HEIGHT - SCORE_BOX_ROW); // Erase the entire space above the hand and to the right of the score board.
 		}
 
 
@@ -1062,6 +1153,7 @@ public class GameBoard
 							hand[handCard].setRowCoord(CARD_ROW); // Set the row coordinate of the card
 							hand[handCard].setColCoord(CARD_COL + (handCard * HAND_CELL_WIDTH)); // Set the column coordinate of the card
 							deck[j] = null; // Remove the card from the deck
+							deckLength--; // Decrease the size of the deck
 							dealtCardsCount++;
 						}
 				}
@@ -1157,17 +1249,30 @@ public class GameBoard
 		 */
 		private void discard() throws InterruptedException
 		{
-			eraseScoreBoard(); // Clear the score box
-			currentHandType = ""; // Reset the hand type
-			printScoreBoard(); // Re-print the score box
+			if (selectedCardsCount != 0 && discards != 0) // As long as we have some cards selected
+			{
+				discards--; //Decrease the number of discards left
+				eraseScoreBoard(); // Clear the score box
+				currentHandType = ""; // Reset the hand type
+				printScoreBoard(); // Re-print the score box
+				
+				removeSelectedCards(); // Remove the selected cards from the 
+
+
+				printBoard(true); // Print the board and the hand
+				Thread.sleep(500); // Pause for half a second
+
+				refillHand();
+			}
+			else if (selectedCardsCount == 0)
+			{
+				System.out.println("Please select a card before discarding");
+			}
+			else if (discards == 0)
+			{
+				System.err.println("No discards remaining");
+			}
 			
-			removeSelectedCards(); // Remove the selected cards from the 
-
-
-			printBoard(true); // Print the board and the hand
-			Thread.sleep(500); // Pause for half a second
-
-			refillHand();
 			
 		}
 
@@ -1312,6 +1417,30 @@ public class GameBoard
 
 		/**** Array Methods ****/
 		// These methods perform various tasks on arrays necessary for game logic
+
+		/**
+		 * Fills the deck with cards
+		 */
+		private void fillDeck()
+		{
+			// Fill the deck with cards
+			for (int i = 0; i < 13; i++)
+			{
+				deck[i] = new Card(i + 1, "Spades", false, 0, 0); 
+			}
+			for (int i = 13; i < 26; i++)
+			{
+				deck[i] = new Card(i - 12, "Hearts", false, 0, 0);
+			}
+			for (int i = 26; i < 39; i++)
+			{
+				deck[i] = new Card(i - 25, "Diamonds", false, 0, 0);
+			}
+			for (int i = 39; i < 52; i++)
+			{
+				deck[i] = new Card(i - 38, "Clubs", false, 0, 0);
+			}
+		}
 
 		/**
 		 * Swaps two cards in the array at the specified indices.
@@ -1800,43 +1929,54 @@ public class GameBoard
 
 		private void playHand() throws InterruptedException
 		{
-			Card[] playHand = new Card[5]; // Create a new array to hold the play hand
-			int playSize = selectedCardsCount; // Get the number of selected cards before we wipe the selected array
-			int startRow = HAND_ROW - 10; // Set the starting row for the play hand
-			int totalWidth = playSize * HAND_CELL_WIDTH; // Calculate the total width of the play hand
-			// Set the starting column for the play hand, shifting it backwards from column 109 (the middle of the hand)
-			// Since each card has an odd width (to ensure it has a middle column) we subtract 1 from the total width before dividing by 2
-			int startCol = 110 - ((totalWidth - 1)/2); 
-			for (int i = 0; i < playHand.length; i++)
+			if (selectedCardsCount != 0) // As long as we have cards selected
 			{
-				playHand[i] = null; // Initialize the play hand as null before filling it
-			}
-			for (int i = 0; i < selectedCardsCount; i++)
-			{
-				if (selectedCards[i] != null) // If the selected card is not null
+				hands--; //Decrease the number of hands remaining
+				Card[] playHand = new Card[5]; // Create a new array to hold the play hand
+				int playSize = selectedCardsCount; // Get the number of selected cards before we wipe the selected array
+				int startRow = HAND_ROW - 10; // Set the starting row for the play hand
+				int totalWidth = playSize * HAND_CELL_WIDTH; // Calculate the total width of the play hand
+				// Set the starting column for the play hand, shifting it backwards from column 109 (the middle of the hand)
+				// Since each card has an odd width (to ensure it has a middle column) we subtract 1 from the total width before dividing by 2
+				int startCol = 110 - ((totalWidth - 1)/2); 
+				for (int i = 0; i < playHand.length; i++)
 				{
-					playHand[i] = new Card (selectedCards[i]); // Add the selected card to the play hand
-					playHand[i].setRowCoord(startRow); // Set the row coordinate of the card
-					playHand[i].setColCoord(startCol + (i * HAND_CELL_WIDTH)); // Set the column coordinate of the card
-					System.out.println(playHand[i].toString()); 
+					playHand[i] = null; // Initialize the play hand as null before filling it
 				}
+				for (int i = 0; i < selectedCardsCount; i++)
+				{
+					if (selectedCards[i] != null) // If the selected card is not null
+					{
+						playHand[i] = new Card (selectedCards[i]); // Add the selected card to the play hand
+						playHand[i].setRowCoord(startRow); // Set the row coordinate of the card
+						playHand[i].setColCoord(startCol + (i * HAND_CELL_WIDTH)); // Set the column coordinate of the card
+						System.out.println(playHand[i].toString()); 
+					}
+				}
+				removeSelectedCards(); // Remove the selected cards from the hand
+				printCards(playHand);
+				printBoard(true); // Print the board
+
+				Thread.sleep(500);
+				scoreCards(playHand);
+
+				eraseScoreBoard(); // Clear the score box
+				currentHandType = ""; // Reset the hand type
+				printScoreBoard(); // Re-print the score box
+				erasePlayBoard(); // Erase all the played cards
+
+				printBoard(false); // Print the board with blank spaces still showing
+				Thread.sleep(500); // Pause
+
+				refillHand(); // Refill the hand (this handles the rest of the printing)
+
+				checkLoss(); // Check if we've lost before continuing
 			}
-			removeSelectedCards(); // Remove the selected cards from the hand
-			printCards(playHand);
-			printBoard(true); // Print the board
-
-			Thread.sleep(500);
-			scoreCards(playHand);
-
-			eraseScoreBoard(); // Clear the score box
-			currentHandType = ""; // Reset the hand type
-			printScoreBoard(); // Re-print the score box
-			erasePlayBoard(); // Erase all the played cards
-
-			printBoard(false); // Print the board with blank spaces still showing
-			Thread.sleep(500); // Pause
-
-			refillHand(); // Refill the hand (this handles the rest of the printing)
+			else
+			{
+				System.out.println("Please select cards before playing");
+			}
+			
 
 		}
 
@@ -1949,6 +2089,87 @@ public class GameBoard
 			printScoreBoard();
 		}
 
+		private boolean checkWin() throws InterruptedException
+		{
+			if (currentScore > currentGoal || currentScore == currentGoal) // If we've met the required score, we've won
+			{
+				erase(WIN_BOX_ROW, WIN_BOX_COL, WIN_BOX_WIDTH, WIN_BOX_HEIGHT);
+				printBox(WIN_BOX_ROW, WIN_BOX_COL, WIN_BOX_HEIGHT, WIN_BOX_WIDTH, YELLOW);
+
+				// Center the win text and print it
+				String[] centeredWin = centerAscii(WIN_ARRAY, WIN_BOX_WIDTH - 2);
+				stampBoard(centeredWin, WIN_BOX_ROW + 1, WIN_BOX_COL + 1, YELLOW);
+				
+				printBoard(false);
+				Thread.sleep(2000);
+
+				if (currentLevel == 5) // If we're at the last level
+				{
+					System.out.println("Thank you for playing!");
+					System.exit(0); // Exit the program
+				}
+
+				currentLevel++;
+				initializeBoard(); // Re-initialize the board
+				printBoard(true); // Re-print the board
+				return true;
+			}
+			return false;
+		}
+
+		private boolean checkLoss() throws InterruptedException
+		{
+			if (deckLength == 0 || hands == 0) // if we've run out of cards or hands
+			{
+				erase(WIN_BOX_ROW, WIN_BOX_COL, WIN_BOX_WIDTH, WIN_BOX_HEIGHT);
+				printBox(WIN_BOX_ROW, WIN_BOX_COL, WIN_BOX_HEIGHT, WIN_BOX_WIDTH, RED);
+
+				// Center the win text and print it
+				String[] centeredFail = centerAscii(FAIL_ARRAY, WIN_BOX_WIDTH - 2);
+				stampBoard(centeredFail, WIN_BOX_ROW + 1, WIN_BOX_COL + 1, RED);
+				
+				printBoard(false);
+				Thread.sleep(2000);
+				System.exit(0); // Exit the program, don't bother returning true
+			}
+			return false;
+		}
+
+		private void updateGoal()
+		{
+			switch (currentLevel)
+			{
+				case 1:
+					currentGoal = LEVEL_ONE_GOAL;
+					break;
+				case 2:
+					currentGoal = LEVEL_TWO_GOAL;
+					break;
+				case 3:
+					currentGoal = LEVEL_THREE_GOAL;
+					break;
+				case 4:
+					currentGoal = LEVEL_FOUR_GOAL;
+					break;
+				case 5:
+					currentGoal = LEVEL_FIVE_GOAL;
+					break;
+				default:
+					currentGoal = LEVEL_ONE_GOAL;
+					break;
+			}
+		}
+
+		/**
+		 * Sets all the cards in the hand to null
+		 */
+		private void clearHand()
+		{
+			for (int card = 0; card < hand.length; card++)
+			{
+				hand[card] = null;
+			}
+		}
 
 
 
@@ -1961,14 +2182,10 @@ public class GameBoard
 			boolean contGame = true; // Set LCV to true
 			Scanner scanner = new Scanner(System.in);
 			this.initializeBoard();
-			this.shuffleDeck(); // Shuffle the deck
-			this.printBoard(true);
-			Thread.sleep(1000); // Sleep for 1 second
-			this.dealHand(); // Deal the hand
-			sortHand(sortType); // Sort the hand
-			this.printBoard(true);
 			while (contGame)
 			{
+				updateGoal(); // Update the goal score first
+
 				// We read if the initial string is empty before going any further
 				String stringInput = scanner.nextLine();
 				System.out.print("\u001B[2K" + "\u001B[1A"); // Clear the line and move the cursor up to reduce flickering in the board output
@@ -2024,6 +2241,7 @@ public class GameBoard
 							break;
 						case 'p':
 							this.playHand(); // Play the hand
+							this.checkWin();// Check if we've won
 							break;
 						case 'h':
 							printHelp();
@@ -2069,6 +2287,24 @@ public class GameBoard
 					System.out.println(hand[i].toString());
 				}
 				if (hand[i] == null)
+				{
+					System.out.println("null");
+				}
+			}
+		}
+
+		/**
+		 * Debug method that prints the entire deck to the console for debugging.
+		 */
+		private static void testPrintDeck()
+		{
+			for (int i = 0; i < deck.length; i++)
+			{
+				if (deck[i] != null)
+				{
+					System.out.println(deck[i].toString());
+				}
+				else
 				{
 					System.out.println("null");
 				}
