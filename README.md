@@ -25,7 +25,7 @@ The player can access this info at any time by entering 'h' into the game
 
 ![Image of the help screen](https://cdn.discordapp.com/attachments/1240802108098482199/1374160593963188304/image.png?ex=682d0a48&is=682bb8c8&hm=bae4d58e95ec3224a3d704aee124673ff8b9c1ece2f61efc7bd337157e1ebfaf&)
 
-Notable exception: A straight can be played with an ace, 10, jack, queen, and king, despite the ace not being strictly part of the increasing order
+==Notable exception==: A straight can be played with an ace, 10, jack, queen, and king, despite the ace not being strictly part of the increasing order
 
 ![Image of special straight case](https://github.com/user-attachments/assets/cbf174c0-9596-47d9-b924-cbf4e19135d9)
 
