@@ -2,7 +2,7 @@
 # Unit Deliverable<br><sup>Starter Project<sup>
 
 # JAVA CARD GAME
-In this program based off of the game [Balatro](https://www.playbalatro.com/), the player selects and plays hands of cards in an attempt to beat the target score and win the game.
+In this program based off of the game [Balatro🃏](https://www.playbalatro.com/), the player selects and plays hands of cards in an attempt to beat the target score and win the game.
 
 ## How to play
 ![Image of the game](https://github.com/user-attachments/assets/e1b7b946-2600-4f34-8756-64a34ef467a5)
@@ -36,6 +36,13 @@ Once the cards have been scored, the points are multiplied by the hand's multipl
 ![Image of score board](https://github.com/user-attachments/assets/6556037e-8ddf-4be6-9f96-52575ff082a2)
 
 Once the player scores enough to beat the target in the top right, they win, and move on to the next stage. 
+
+The stages' target scores are as follows:
+1. 250
+2. 400
+3. 750
+4. 1250
+5. 2000
 
 The player loses if they run out of hands before they meet the goal.
 
