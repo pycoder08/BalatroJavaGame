@@ -20,3 +20,15 @@ When a hand is played, the program detects if it forms one of the following *han
 | Two pair | Two pairs of cards of the same rank |
 | Full house | A three of a kind and two of a kind | 
 | High card | Scores the highest card |
+
+The player can access this info at any time by entering 'h' into the game
+
+![Image of the help screen](https://cdn.discordapp.com/attachments/1240802108098482199/1374160593963188304/image.png?ex=682d0a48&is=682bb8c8&hm=bae4d58e95ec3224a3d704aee124673ff8b9c1ece2f61efc7bd337157e1ebfaf&)
+
+Notable exception: A straight can be played with an ace, 10, jack, queen, and king, despite the ace not being strictly part of the increasing order
+
+![Image of special straight case](https://github.com/user-attachments/assets/cbf174c0-9596-47d9-b924-cbf4e19135d9)
+
+Each hand comes with a base number of points and a multiplier, encouraging the player to form more difficult hands. After the player enters their hand, each card scores as high as its rank (or 11 for an ace), and that score is added to the base number of points for the hand. Once the cards have been scored, the points are multiplied by the hand's multiplier, and the resulting score is added to the total (seen in yellow on the score board). Once the player scores enough to beat the target in the top right, they win, and move on to the next stage.
+
+The player loses if they run out of hands before they meet the goal.
