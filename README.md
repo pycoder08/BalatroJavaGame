@@ -29,6 +29,10 @@ Notable exception: A straight can be played with an ace, 10, jack, queen, and ki
 
 ![Image of special straight case](https://github.com/user-attachments/assets/cbf174c0-9596-47d9-b924-cbf4e19135d9)
 
-Each hand comes with a base number of points and a multiplier, encouraging the player to form more difficult hands. After the player enters their hand, each card scores as high as its rank (or 11 for an ace), and that score is added to the base number of points for the hand. Once the cards have been scored, the points are multiplied by the hand's multiplier, and the resulting score is added to the total (seen in yellow on the score board). Once the player scores enough to beat the target in the top right, they win, and move on to the next stage.
+Each hand comes with a base number of points and a multiplier, encouraging the player to form more difficult hands. After the player enters their hand, each card scores as high as its rank (or 11 for an ace), and that score is added to the base number of points for the hand. 
+
+Once the cards have been scored, the points are multiplied by the hand's multiplier, and the resulting score is added to the total (seen in yellow on the score board). 
+
+Once the player scores enough to beat the target in the top right, they win, and move on to the next stage.
 
 The player loses if they run out of hands before they meet the goal.
