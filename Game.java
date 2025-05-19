@@ -426,6 +426,7 @@ public class Game
 	}
 
 	// Arrays to hold ascii art for different text
+	// Credit to patorjk.com/software/taag/ for the ascii art
 
 	private static final String[] HELP_ARRAY = new String[6];
 	static {
@@ -2508,7 +2509,7 @@ public class Game
 
 
 		currentPoints = 0;
-		currentMult = 0;
+		currentMult = 1;
 		eraseScoreBoard(); // Clear the score box
 		currentHandType = ""; // Reset the hand type
 		printScoreBoard(); // Re-print the score box
