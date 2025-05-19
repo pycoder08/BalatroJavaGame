@@ -5,6 +5,8 @@
 In this program based off of the game [Balatro🃏](https://www.playbalatro.com/), the player selects and plays hands of cards in an attempt to beat the target score and win the game.
 
 ## How to play
+**IMPORTANT:** Due to the high amount of unique unicode characters present in this project, your terminal may not be able to display the game properly. To fix this, simply enter 'chcp 65001' into your terminal to change the encoding method and it should work.
+
 ![Image of the game](https://github.com/user-attachments/assets/e1b7b946-2600-4f34-8756-64a34ef467a5)
 
 The game consists of 5 levels, each with an increasingly difficult target score to beat. To start, the player enters numbers 1 through 7 to select a card in their hand. They select a maximum of 5 cards, and can choose to either play the hand or discard it. 
