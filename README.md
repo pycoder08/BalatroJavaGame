@@ -35,6 +35,10 @@ Once the cards have been scored, the points are multiplied by the hand's multipl
 
 ![Image of score board](https://github.com/user-attachments/assets/6556037e-8ddf-4be6-9f96-52575ff082a2)
 
-Once the player scores enough to beat the target in the top right, they win, and move on to the next stage.
+Once the player scores enough to beat the target in the top right, they win, and move on to the next stage. 
 
 The player loses if they run out of hands before they meet the goal.
+
+Have fun!
+
+Credit to [patorjk.com/software/taag/](patorjk.com/software/taag/) for the ascii art used in this project.
