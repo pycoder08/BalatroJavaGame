@@ -33,6 +33,8 @@ Each hand comes with a base number of points and a multiplier, encouraging the p
 
 Once the cards have been scored, the points are multiplied by the hand's multiplier, and the resulting score is added to the total (seen in yellow on the score board). 
 
+![Image of score board](https://github.com/user-attachments/assets/6556037e-8ddf-4be6-9f96-52575ff082a2)
+
 Once the player scores enough to beat the target in the top right, they win, and move on to the next stage.
 
 The player loses if they run out of hands before they meet the goal.
