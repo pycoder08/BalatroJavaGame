@@ -2189,6 +2189,7 @@ public class Game
 
 			refillHand(); // Refill the hand (this handles the rest of the printing)
 
+			checkWin();// Check if we've won before checking if we've lost to prevent issues when the payer wins on the last hand
 			checkLoss(); // Check if we've lost before continuing
 		}
 		else
@@ -2503,7 +2504,6 @@ public class Game
 						break;
 					case 'p':
 						this.playHand(); // Play the hand
-						this.checkWin();// Check if we've won
 						break;
 					case 'h':
 						printHelp();

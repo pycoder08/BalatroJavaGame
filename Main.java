@@ -42,7 +42,7 @@ public class Main
 
     /***** OUTPUT SECTION *****/
     
-    GameBoard board = new GameBoard();
+    Game board = new Game();
     board.playGame();
 
 
