@@ -9,7 +9,14 @@ In this program based off of the game [Balatro](https://www.playbalatro.com/), t
 
 The game consists of 5 levels, each with an increasingly difficult target score to beat. To start, the player enters numbers 1 through 7 to select a card in their hand. They select a maximum of 5 cards, and can choose to either play the hand or discard it. 
 When a hand is played, the program detects if it forms one of the following *hands*:
-| Syntax | Description |
+| Hand | Description |
 | ----------- | ----------- |
-| Header | Title |
-| Paragraph | Text |
+| Straight | 5 cards in increasing order |
+| Flush | 5 cards of the same suit |
+| Straight Flush | 5 Cards of the same suit and increasing order |
+| 2 of a kind | Two cards of the same rank |
+| 3 of a kind | Three cards of the same rank |
+| 4 of a kind | Four cards of the same rank |
+| Two pair | Two pairs of cards of the same rank |
+| Full house | A three of a kind and two of a kind | 
+| High card | Scores the highest card |
