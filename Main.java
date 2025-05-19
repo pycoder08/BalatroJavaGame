@@ -6,22 +6,27 @@
 
 /********************************************
 *	<TITLE OF PROGRAM>
+* Card Game
 *********************************************
 *	PROGRAM DESCRIPTION:
-*	<1-2 sentences describing overall program>
+*	Inspired by the game balatro, this is a card game where the player can select and play cards 
+* in certain configurations to beat the level and continue on to the next one.
 *********************************************
 *	ALGORITHM:
-*	<Pseudocode here>
+*	Keep the board in an array of arrays where each character has its own spot in the array
+* Mutate this array every time we add something to the board
+* Print the board to display changes
+* Keep a class for cards where each card has a number, suit, selection status and row/col coordinate
+* Establish arrays for deck, hand, and selected cards
+* Take user input to select cars, play them, discard them, etc, and use custom methods to carry out the actions
+* Check for win/loss conditions and play till the user wins all levels or loses by running out of hands/cards in the deck 
 *********************************************
 *	STATIC METHODS:
-* <UML style list of static methods>
+* No methods in Main, all game logic contained in Game.java
 *********************************************
 *	ALL IMPORTED PACKAGES NEEDED AND PURPOSE:
- *	Not used for UD1
-*	<ex: Scanner= used for console input>
+ *	Scanner used for console input in Game.java
 *********************************************/
-
-// <IMPORTS GO HERE - Not used for UD1>
 
 public class Main 
 {
@@ -42,11 +47,10 @@ public class Main
 
     /***** OUTPUT SECTION *****/
     
-    Game board = new Game();
+    // All game logic is contained in Game.java
+    Game board = new Game(); 
     board.playGame();
 
-
-  
   }
   /***** STATIC METHODS *****/
 }

@@ -75,8 +75,6 @@ Game
 - LEVEL_THREE_GOAL: int
 - LEVEL_FOUR_GOAL: int
 - LEVEL_FIVE_GOAL: int
-- RESET: String
-- BLACK: String
 - RED: String
 - GREEN: String
 - YELLOW: String
@@ -120,10 +118,16 @@ Game
 - FAIL_ARRAY: String[]
 - board: String[][]
 - colors: String[][]
+- saveBoard: String[][]
+- saveColors: String[][]
 - deck: Card[]
+- deckLength: int
+- hand: Card[]
 - selectedCards: Card[]
 - dealtCardsCount: int
 - selectedCardsCount: int
+- hands: int
+- discards: int
 - sortType: int
 - currentHandType: String
 - currentPoints: int
@@ -132,32 +136,74 @@ Game
 - targetNum: int[]
 - targetNumLength: int
 - viewingHelp: boolean
-- saveBoard: String[][]
-- saveColors: String[][]
-- deckLength: int
 - currentGoal: int
 - currentLevel: int
-- hands: int
-- discards: int
-- hand: Card[]
 -----------------------------------------
-+ playGame(): void
++ Game()
++ Game(String[][], String[][], String[][], String[][], Card[], int, Card[], Card[], int, int, int, int, int, String, int, int, int, int[], int, boolean, int, int)
++ Game(Game)
++ getBoard(): String[][]
++ getColors(): String[][]
++ getSaveBoard(): String[][]
++ getSaveColors(): String[][]
++ getDeck(): Card[]
++ getDeckLength(): int
++ getHand(): Card[]
++ getSelectedCards(): Card[]
++ getDealtCardsCount(): int
++ getSelectedCardsCount(): int
++ getHands(): int
++ getDiscards(): int
++ getSortType(): int
++ getCurrentHandType(): String
++ getCurrentPoints(): int
++ getCurrentMult(): int
++ getCurrentScore(): int
++ getTargetNum(): int[]
++ getTargetNumLength(): int
++ isViewingHelp(): boolean
++ getCurrentGoal(): int
++ getCurrentLevel(): int
++ setBoard(String[][]): void
++ setColors(String[][]): void
++ setSaveBoard(String[][]): void
++ setSaveColors(String[][]): void
++ setDeck(Card[]): void
++ setDeckLength(int): void
++ setHand(Card[]): void
++ setSelectedCards(Card[]): void
++ setDealtCardsCount(int): void
++ setSelectedCardsCount(int): void
++ setHands(int): void
++ setDiscards(int): void
++ setSortType(int): void
++ setCurrentHandType(String): void
++ setCurrentPoints(int): void
++ setCurrentMult(int): void
++ setCurrentScore(int): void
++ setTargetNum(int[]): void
++ setTargetNumLength(int): void
++ setViewingHelp(boolean): void
++ setCurrentGoal(int): void
++ setCurrentLevel(int): void
 + toString(): String
++ equals(Game): boolean
++ playGame(): void
 - initializeBoard(): void
-- stampBoard(stamp: String[], row: int, col: int, color: String): void
-- printBoard(printHand: boolean): void
+- stampBoard(String[], int, int, String): void
+- printBoard(boolean): void
 - printHandDisc(): void
 - printDeckRemaining(): void
-- printBox(row: int, col: int, height: int, width: int, color: String): void
-- printHorizBoxes(row: int, col: int, height: int, cellWidth: int, cells: int): void
+- printBox(int, int, int, int, String): void
+- printHorizBoxes(int, int, int, int, int): void
 - printHandGrid(): void
 - printLegend(): void
 - printScoreBoard(): void
-- printCardBack(row: int, col: int): void
+- printCardBack(int, int): void
 - printHandText(): void
 - printHelp(): void
-- printHandTip(cardArray: Card[], tip: String): void
-- printCards(cardArray: Card[]): void
+- printHandTip(Card[], String): void
+- printCards(Card[]): void
 - printHand(): void
 - erase(int, int, int, int): void
 - eraseCard(Card[], int): void
@@ -234,15 +280,18 @@ public class Game
 	private static final int SCORE_BOARD_WIDTH = 51;
 	private static final int SCORE_BOARD_HEIGHT = 27;
 
+	// Constants for the deck symbol
 	private static final int DECK_ROW = CARD_ROW;
 	private static final int DECK_COL = SCORE_BOARD_COL + SCORE_BOARD_WIDTH - CARD_WIDTH;
 
 	private static final int POINTS_ROW = SCORE_BOARD_ROW + SCORE_BOARD_HEIGHT - 8; // The score should be a little from the bottom of the scoreboard. Makes for easier changes
 	private static final int POINTS_COL =  SCORE_BOARD_COL + 2; // The score is a little to the right of the left edge of the score board
 
+	// Constants for the X on the scoreboard
 	private static final int X_ROW = POINTS_ROW + 1;
 	private static final int X_COL = POINTS_COL + 20;
 
+	// Constants for the mult number
 	private static final int MULT_ROW = POINTS_ROW;
 	private static final int MULT_COL = X_COL + 8; 
 	
@@ -253,9 +302,11 @@ public class Game
 	private static final int SCORE_BOX_COL = POINTS_COL;
 	private static final int SCORE_BOX_WIDTH = SCORE_BOARD_WIDTH - 2 * (POINTS_COL - SCORE_BOARD_COL);
 
+	// Constants for the score
 	private static final int SCORE_ROW = SCORE_BOX_ROW + 1;
 	private static final int SCORE_COL = SCORE_BOARD_COL + 3;
 
+	// Constants for the win/lose box
 	private static final int WIN_BOX_HEIGHT = 9;
 	private static final int WIN_BOX_WIDTH = 50;
 	private static final int WIN_BOX_ROW = (ROWS/2) - (WIN_BOX_HEIGHT/2);
@@ -271,6 +322,7 @@ public class Game
 	private static final int STRAIGHT_POINTS = 30;
 	private static final int STRAIGHT_MULT = 4;
 
+	// Constants for each hand score
 	private static final int FLUSH_POINTS = 35;
 	private static final int FLUSH_MULT = 4;
 
@@ -307,8 +359,6 @@ public class Game
 	private static final int LEVEL_FIVE_GOAL = 2000;
 
 	// Color codes
-	private static final String RESET  = "\u001B[0m";
-	private static final String BLACK  = "\u001B[30m";
 	private static final String RED    = "\u001B[31m";
 	private static final String GREEN  = "\u001B[32m";
 	private static final String YELLOW = "\u001B[33m";
@@ -330,7 +380,7 @@ public class Game
 	private static final String[] SUITS_ARRAY = {"Spades", "Hearts", "Diamonds", "Clubs"}; // Array of suits
 
 	private static final String[] CARD_BACK = new String[7];
-	{
+	static {
 		CARD_BACK[0] = "┌─────────┐";
 		CARD_BACK[1] = "│# # # # #│";
 		CARD_BACK[2] = "│# # # # #│";
@@ -341,7 +391,7 @@ public class Game
 	}
 
 	private static final String[] DASHED_CARD = new String[7];
-	{
+	static {
 		DASHED_CARD[0] = "┌ - - - - ┐";
 		DASHED_CARD[1] = "│         │";
 		DASHED_CARD[2] = "│         │";
@@ -353,7 +403,7 @@ public class Game
 
 	// Array to keep legend text
 	private static final String[] legendArray = new String[6];
-	{
+	static {
 		legendArray[0] = "Select: 1 - 7";
 		legendArray[1] = "Discard: d";
 		legendArray[2] = "Sort: s/n (suit/number)";
@@ -378,7 +428,7 @@ public class Game
 	// Arrays to hold ascii art for different text
 
 	private static final String[] HELP_ARRAY = new String[6];
-	{
+	static {
 		HELP_ARRAY[0] = " _   _ _____ _    ______ ";
 		HELP_ARRAY[1] = "| | | |  ___| |   | ___ \\";
 		HELP_ARRAY[2] = "| |_| | |__ | |   | |_/ /";
@@ -389,7 +439,7 @@ public class Game
 
 
 	private static final String[] STRAIGHT_ARRAY = new String[8];
-	{
+	static {
 		STRAIGHT_ARRAY[0] = " _____ _             _       _     _   ";
 		STRAIGHT_ARRAY[1] = "/  ___| |           (_)     | |   | |  ";
 		STRAIGHT_ARRAY[2] = "\\ `--.| |_ _ __ __ _ _  __ _| |__ | |_ ";
@@ -402,7 +452,7 @@ public class Game
 	}
 
 	private static final String[] FLUSH_ARRAY = new String[6];
-	{
+	static {
 		FLUSH_ARRAY[0] = " _____ _           _     ";
 		FLUSH_ARRAY[1] = "|  ___| |         | |    ";
 		FLUSH_ARRAY[2] = "| |_  | |_   _ ___| |__  ";
@@ -413,7 +463,7 @@ public class Game
 
 
 	private static final String[] STRAIGHT_FLUSH_ARRAY = new String[11];
-	{
+	static {
 		STRAIGHT_FLUSH_ARRAY[0] = " _____ _             _       _     _   ";
 		STRAIGHT_FLUSH_ARRAY[1] = "/  ___| |           (_)     | |   | |  ";
 		STRAIGHT_FLUSH_ARRAY[2] = "\\ `--.| |_ _ __ __ _ _  __ _| |__ | |_ ";
@@ -428,7 +478,7 @@ public class Game
 	}
 
 	private static final String[] HIGH_CARD_ARRAY = new String[8];
-	{
+	static{
 		HIGH_CARD_ARRAY[0] = " _   _ _       _       _____               _ ";
 		HIGH_CARD_ARRAY[1] = "| | | (_)     | |     /  __ \\             | |";
 		HIGH_CARD_ARRAY[2] = "| |_| |_  __ _| |__   | /  \\/ __ _ _ __ __| |";
@@ -440,7 +490,7 @@ public class Game
 	}
 
 	private static final String[] TWO_KIND_ARRAY = new String[9];
-	{
+	static {
 		TWO_KIND_ARRAY[0] = " _____                                  ";
 		TWO_KIND_ARRAY[1] = "/ __  \\                                 ";
 		TWO_KIND_ARRAY[2] = "`' / /'                                 ";
@@ -453,7 +503,7 @@ public class Game
 	}
 
 	private static final String[] THREE_KIND_ARRAY = new String[9];
-	{
+	static {
 		THREE_KIND_ARRAY[0] = " _____                                  ";
 		THREE_KIND_ARRAY[1] = "|____ |                                 ";
 		THREE_KIND_ARRAY[2] = "    / /                                 ";
@@ -466,7 +516,7 @@ public class Game
 	}
 
 	private static final String[] FOUR_KIND_ARRAY = new String[9];
-	{
+	static{
 		FOUR_KIND_ARRAY[0] = "   ___                                  ";
 		FOUR_KIND_ARRAY[1] = "  /   |                                 ";
 		FOUR_KIND_ARRAY[2] = " / /| |                                 ";
@@ -479,7 +529,7 @@ public class Game
 	}
 
 	private static final String[] HOUSE_ARRAY = new String[9];
-	{
+	static {
 		HOUSE_ARRAY[0] = "       ______     _ _       ";
 		HOUSE_ARRAY[1] = "       |  ___|   | | |      ";
 		HOUSE_ARRAY[2] = "       | |_ _   _| | |      ";
@@ -494,7 +544,7 @@ public class Game
 
 
 	private static final String[] TWO_PAIR_ARRAY = new String[7];
-	{
+	static{
 		TWO_PAIR_ARRAY[0] = ""; // Blank line for alignment
 		TWO_PAIR_ARRAY[1] = " _____              ______     _      ";
 		TWO_PAIR_ARRAY[2] = "|_   _|             | ___ \\   (_)     ";
@@ -507,7 +557,7 @@ public class Game
 	// Arrays to hold ascii art for numbers
 
 	private static final String[] ZERO_ARRAY = new String[6];
-	{
+	static {
 		ZERO_ARRAY[0] = " _____ ";
 		ZERO_ARRAY[1] = "|  _  |";
 		ZERO_ARRAY[2] = "| |/' |";
@@ -517,7 +567,7 @@ public class Game
 	}
 
 	private static final String[] ONE_ARRAY = new String[6];
-	{
+	static {
 		ONE_ARRAY[0] = " __  ";
 		ONE_ARRAY[1] = "/  | ";
 		ONE_ARRAY[2] = "`| | ";
@@ -527,7 +577,7 @@ public class Game
 	}
 	
 	private static final String[] TWO_ARRAY = new String[6];
-	{
+	static {
 		TWO_ARRAY[0] = " _____ ";
 		TWO_ARRAY[1] = "/ __  \\";
 		TWO_ARRAY[2] = "`' / /'";
@@ -537,7 +587,7 @@ public class Game
 	}
 
 	private static final String[] THREE_ARRAY = new String[6];
-	{
+	static {
 		THREE_ARRAY[0] = " _____ ";
 		THREE_ARRAY[1] = "|____ |";
 		THREE_ARRAY[2] = "    / /";
@@ -547,7 +597,7 @@ public class Game
 	}
 
 	private static final String[] FOUR_ARRAY = new String[6];
-	{
+	static{
 		FOUR_ARRAY[0] = "   ___ ";
 		FOUR_ARRAY[1] = "  /   |";
 		FOUR_ARRAY[2] = " / /| |";
@@ -557,7 +607,7 @@ public class Game
 	}
 
 	private static final String[] FIVE_ARRAY = new String[6];
-	{
+	static {
 		FIVE_ARRAY[0] = " _____ ";
 		FIVE_ARRAY[1] = "|  ___|";
 		FIVE_ARRAY[2] = "|___ \\ ";
@@ -567,7 +617,7 @@ public class Game
 	}
 
 	private static final String[] SIX_ARRAY = new String[6];
-	{
+	static {
 		SIX_ARRAY[0] = "  ____ ";
 		SIX_ARRAY[1] = " / ___|";
 		SIX_ARRAY[2] = "/ /___ ";
@@ -577,7 +627,7 @@ public class Game
 	}
 
 	private static final String[] SEVEN_ARRAY = new String[6];
-	{
+	static {
 		SEVEN_ARRAY[0] = " ______";
 		SEVEN_ARRAY[1] = "|___  /";
 		SEVEN_ARRAY[2] = "   / / ";
@@ -587,7 +637,7 @@ public class Game
 	}
 
 	private static final String[] EIGHT_ARRAY = new String[6];
-	{
+	static {
 		EIGHT_ARRAY[0] = " _____ ";
 		EIGHT_ARRAY[1] = "|  _  |";
 		EIGHT_ARRAY[2] = " \\ V / ";
@@ -597,7 +647,7 @@ public class Game
 	}
 
 	private static final String[] NINE_ARRAY = new String[6];
-	{
+	static {
 		NINE_ARRAY[0] = " _____ ";
 		NINE_ARRAY[1] = "|  _  |";
 		NINE_ARRAY[2] = "| |_| |";
@@ -608,7 +658,7 @@ public class Game
 
 	// Array for all the number arrays
 	private static final String[][] NUMBERS_ARRAY = new String[10][];
-	{
+	static {
 		NUMBERS_ARRAY[0] = ZERO_ARRAY;
 		NUMBERS_ARRAY[1] = ONE_ARRAY;
 		NUMBERS_ARRAY[2] = TWO_ARRAY;
@@ -622,7 +672,7 @@ public class Game
 	}
 
 	private static final String[] X_ARRAY = new String[4];
-	{
+	static {
 		X_ARRAY[0] = "__   __";
 		X_ARRAY[1] = "\\ \\_/ /";
 		X_ARRAY[2] = " > _ < ";
@@ -630,7 +680,7 @@ public class Game
 	}
 
 	private static final String[] WIN_ARRAY = new String[6];
-	{
+	static {
 		WIN_ARRAY[0] = " _    _ _____ _   _ _ ";
 		WIN_ARRAY[1] = "| |  | |_   _| \\ | | |";
 		WIN_ARRAY[2] = "| |  | | | | |  \\| | |";
@@ -640,7 +690,7 @@ public class Game
 	}
 
 	private static final String[] FAIL_ARRAY = new String[6];
-	{
+	static {
 		FAIL_ARRAY[0] = "______ ___  _____ _     ";
 		FAIL_ARRAY[1] = "|  ___/ _ \\|_   _| |    ";
 		FAIL_ARRAY[2] = "| |_ / /_\\ \\ | | | |    ";
@@ -650,74 +700,220 @@ public class Game
 	}
 
 
-
-
-
 	/***** STATIC VARIABLES *****/
-	// Arrays for the board, colors, deck, and selected cards
-	static String[][] board = new String[ROWS][COLS];
-	static String[][] colors = new String[ROWS][COLS]; // Stores the color of each cell to be applied when printing
-	static Card[] deck = new Card[52];
-	static Card[] selectedCards = new Card[5];
-
-	// Logic variables
-	static int dealtCardsCount = 0; // Int to keep track of dealt cards
-	static int selectedCardsCount = 0; // Int to keep track of selected cards
-	static int sortType = 0; /// Int to keep track of the sort kind. Set to 0 by default
-	static String currentHandType = ""; // Int to keep track of the current hand type.
-	static int currentPoints = 0; // Int to keep track of the current points
-	static int currentMult = 1; // Int to keep track of the current multiplier
-	static int currentScore = 0; // Int to keep track of the overall score
-
-	static int[] targetNum = new int[2]; // Int used for scoring hands where only certain cards should count. The second value is only used for two pair
-	static int targetNumLength = 0; // Since targetNum can be partially filled we need a var to keep track of its length
-
-	// variables related to printHelp() that need to be accessible from across the class to persist between method calls
-	static boolean viewingHelp = false; // Int for wheter the user is viewing the help page or not
-	static String[][] saveBoard; // Backup array to save the game board before we erase it
-	static String[][] saveColors; // Backup array for the colors on the board
-
-	static int deckLength = 52; // Int for how big the deck is
-	static int currentGoal; // Int for the current goal to reach
-	static int currentLevel = 1; // Int to keep track of the current level
-
 	
-	static int hands = STARTER_HANDS; // number of hands you have left
-	static int discards = STARTER_DISCARDS; // Number of discards you have left
-
-
-	
-	// Fill the deck with cards
-	{
-		for (int i = 0; i < 13; i++)
-		{
-			deck[i] = new Card(i + 1, "Spades", false, 0, 0); 
-		}
-		for (int i = 13; i < 26; i++)
-		{
-			deck[i] = new Card(i - 12, "Hearts", false, 0, 0);
-		}
-		for (int i = 26; i < 39; i++)
-		{
-			deck[i] = new Card(i - 25, "Diamonds", false, 0, 0);
-		}
-		for (int i = 39; i < 52; i++)
-		{
-			deck[i] = new Card(i - 38, "Clubs", false, 0, 0);
-		}
-	}
-	private static Card[] hand = new Card[7]; // Array to hold the player's hand
-
 	/***** INSTANCE VARIABLES *****/
-	// No instance variables for this class, there's only one game and nothing about it should be mutable from the outside
+	// Board display variables 
+	String[][] board;
+	String[][] colors;
+	String[][] saveBoard; // Backup array to save the game board before we erase it
+	String[][] saveColors; // Backup array for the colors on the board
+
+	// Deck variables
+	Card[] deck;
+	int deckLength = 52; // Int for how big the deck is
+
+	// Hand and selection variables
+	Card[] hand; // Array to hold the player's hand
+	Card[] selectedCards;
+	int dealtCardsCount; // Int to keep track of dealt cards
+	int selectedCardsCount; // Int to keep track of selected cards
+
+	// Game logic variables
+	int hands; // number of hands you have left
+	int discards; // Number of discards you have left
+
+	int sortType; /// Int to keep track of the sort kind. Set to 0 by default
+	String currentHandType; // Int to keep track of the current hand type.
+	int currentPoints; // Int to keep track of the current points
+	int currentMult; // Int to keep track of the current multiplier
+	int currentScore; // Int to keep track of the overall score
+
+	int[] targetNum; // Int used for scoring hands where only certain cards should count. The second value is only used for two pair
+	int targetNumLength; // Since targetNum can be partially filled we need a var to keep track of its length
+
+	boolean viewingHelp; // Int for wheter the user is viewing the help page or not
+
+	int currentGoal; // Int for the current goal to reach
+	int currentLevel; // Int to keep track of the current level
+
+	
 
 	/***** CONSTRUCTORS *****/
-	// No constructors for this class either
+	
+	/**
+	 * Initializes a game object with default values for the very start of the game
+	 */
+	public Game()
+	{
+		this.board = new String[ROWS][COLS]; // initialize the board with default dimensions
+		this.colors = new String[ROWS][COLS]; // Stores the color of each cell to be applied when printing
+
+		this.deck = new Card[52]; // Initialize the deck of length 52 by default
+		this.fillDeck(); // Fill the deck with default cards
+		this.hand = new Card[7]; // Init hand array
+		this.selectedCards = new Card[5]; // Initialize the selected cards array
+		this.dealtCardsCount = 0;
+		this.selectedCardsCount = 0;
+
+
+		// Game logic
+		this.hands = STARTER_HANDS;
+		this.discards = STARTER_DISCARDS;
+
+		// Initialize the save state arrays as blank
+		this.saveBoard = new String[ROWS][COLS];
+		this.saveColors = new String[ROWS][COLS];
+		this.sortType = 0; // Init sort type as numbers
+		this.currentHandType = ""; // No hand type yet
+		this.currentPoints = 0;
+		this.currentMult = 1;
+		this.currentScore = 0;
+
+		this.targetNum = new int[2]; // Keep this blank by default
+		this.targetNumLength  = 0; // Nothing here yet
+
+		this.viewingHelp = false;
+
+		this.currentGoal = LEVEL_ONE_GOAL;
+		this.currentLevel = 1;
+	}
+
+	/**
+	 * Full constructor for Game. Initializes all instance variables.
+	 */
+	public Game(String[][] board, String[][] colors, String[][] saveBoard, String[][] saveColors, Card[] deck, int deckLength, Card[] hand, Card[] selectedCards, int dealtCardsCount, int selectedCardsCount, 
+	int hands, int discards, int sortType, String currentHandType, int currentPoints, int currentMult, int currentScore, int[] targetNum, int targetNumLength, boolean viewingHelp, int currentGoal, int currentLevel) 
+	{
+		this.board = board;
+		this.colors = colors;
+		this.saveBoard = saveBoard;
+		this.saveColors = saveColors;
+		this.deck = deck;
+		this.deckLength = deckLength;
+		this.hand = hand;
+		this.selectedCards = selectedCards;
+		this.dealtCardsCount = dealtCardsCount;
+		this.selectedCardsCount = selectedCardsCount;
+		this.hands = hands;
+		this.discards = discards;
+		this.sortType = sortType;
+		this.currentHandType = currentHandType;
+		this.currentPoints = currentPoints;
+		this.currentMult = currentMult;
+		this.currentScore = currentScore;
+		this.targetNum = targetNum;
+		this.targetNumLength = targetNumLength;
+		this.viewingHelp = viewingHelp;
+		this.currentGoal = currentGoal;
+		this.currentLevel = currentLevel;
+	}
+
+	/**
+	 * Copy constructor for Game. Performs a deep copy of arrays where appropriate.
+	 */
+	public Game(Game other) {
+		// Deep copy 2D arrays
+		this.board = deepCopyBoard(other.board);
+		this.colors = deepCopyBoard(other.colors);
+		this.saveBoard = deepCopyBoard(other.saveBoard);
+		this.saveColors = deepCopyBoard(other.saveColors);
+
+		// Deep copy Card arrays
+		this.deck = new Card[other.deck.length];
+		for (int i = 0; i < other.deck.length; i++) {
+			this.deck[i] = (other.deck[i] != null) ? new Card(other.deck[i]) : null;
+		}
+		this.hand = new Card[other.hand.length];
+		for (int i = 0; i < other.hand.length; i++) {
+			this.hand[i] = (other.hand[i] != null) ? new Card(other.hand[i]) : null;
+		}
+		this.selectedCards = new Card[other.selectedCards.length];
+		for (int i = 0; i < other.selectedCards.length; i++) {
+			this.selectedCards[i] = (other.selectedCards[i] != null) ? new Card(other.selectedCards[i]) : null;
+		}
+
+		// Copy primitives and immutable objects
+		this.deckLength = other.deckLength;
+		this.dealtCardsCount = other.dealtCardsCount;
+		this.selectedCardsCount = other.selectedCardsCount;
+		this.hands = other.hands;
+		this.discards = other.discards;
+		this.sortType = other.sortType;
+		this.currentHandType = other.currentHandType;
+		this.currentPoints = other.currentPoints;
+		this.currentMult = other.currentMult;
+		this.currentScore = other.currentScore;
+		this.targetNum = other.targetNum.clone();
+		this.targetNumLength = other.targetNumLength;
+		this.viewingHelp = other.viewingHelp;
+		this.currentGoal = other.currentGoal;
+		this.currentLevel = other.currentLevel;
+	}
 
 	/***** ACCESSORS *****/
-	// no accessors
+	// Formatting shrunk to one line since we have so many instance variables
+	public String[][] getBoard() { return board; }
+	public String[][] getColors() { return colors; }
+	public String[][] getSaveBoard() { return saveBoard; }
+	public String[][] getSaveColors() { return saveColors; }
+
+	public Card[] getDeck() { return deck; }
+	public int getDeckLength() { return deckLength; }
+
+	public Card[] getHand() { return hand; }
+	public Card[] getSelectedCards() { return selectedCards; }
+	public int getDealtCardsCount() { return dealtCardsCount; }
+	public int getSelectedCardsCount() { return selectedCardsCount; }
+
+	public int getHands() { return hands; }
+	public int getDiscards() { return discards; }
+
+	public int getSortType() { return sortType; }
+	public String getCurrentHandType() { return currentHandType; }
+	public int getCurrentPoints() { return currentPoints; }
+	public int getCurrentMult() { return currentMult; }
+	public int getCurrentScore() { return currentScore; }
+
+	public int[] getTargetNum() { return targetNum; }
+	public int getTargetNumLength() { return targetNumLength; }
+
+	public boolean isViewingHelp() { return viewingHelp; }
+
+	public int getCurrentGoal() { return currentGoal; }
+	public int getCurrentLevel() { return currentLevel; }
+
 	/***** MUTATORS *****/
-	// no mutators
+	// Formatting shrunk to one line since we have so many instance variables
+	public void setBoard(String[][] board) { this.board = board; }
+	public void setColors(String[][] colors) { this.colors = colors; }
+	public void setSaveBoard(String[][] saveBoard) { this.saveBoard = saveBoard; }
+	public void setSaveColors(String[][] saveColors) { this.saveColors = saveColors; }
+
+	public void setDeck(Card[] deck) { this.deck = deck; }
+	public void setDeckLength(int deckLength) { this.deckLength = deckLength; }
+
+	public void setHand(Card[] hand) { this.hand = hand; }
+	public void setSelectedCards(Card[] selectedCards) { this.selectedCards = selectedCards; }
+	public void setDealtCardsCount(int dealtCardsCount) { this.dealtCardsCount = dealtCardsCount; }
+	public void setSelectedCardsCount(int selectedCardsCount) { this.selectedCardsCount = selectedCardsCount; }
+
+	public void setHands(int hands) { this.hands = hands; }
+	public void setDiscards(int discards) { this.discards = discards; }
+
+	public void setSortType(int sortType) { this.sortType = sortType; }
+	public void setCurrentHandType(String currentHandType) { this.currentHandType = currentHandType; }
+	public void setCurrentPoints(int currentPoints) { this.currentPoints = currentPoints; }
+	public void setCurrentMult(int currentMult) { this.currentMult = currentMult; }
+	public void setCurrentScore(int currentScore) { this.currentScore = currentScore; }
+
+	public void setTargetNum(int[] targetNum) { this.targetNum = targetNum; }
+	public void setTargetNumLength(int targetNumLength) { this.targetNumLength = targetNumLength; }
+
+	public void setViewingHelp(boolean viewingHelp) { this.viewingHelp = viewingHelp; }
+
+	public void setCurrentGoal(int currentGoal) { this.currentGoal = currentGoal; }
+	public void setCurrentLevel(int currentLevel) { this.currentLevel = currentLevel; }
 
 	/***** OTHER REQUIRED METHODS *****/
 
@@ -725,7 +921,7 @@ public class Game
 	 * Returns a string representation of the GameBoard object.
 	 * @return A string representation of the GameBoard object.
 	 */
-        @Override
+    @Override
 	public String toString()
 	{
 		StringBuilder sb = new StringBuilder();
@@ -741,7 +937,34 @@ public class Game
 		return sb.toString();
 	}
 
-	// no equals method
+	/**
+	 * Returns true if the target object is equal to the input object
+	 */
+	public boolean equals(Game other) 
+	{
+		return java.util.Arrays.deepEquals(this.board, other.board)
+			&& java.util.Arrays.deepEquals(this.colors, other.colors)
+			&& java.util.Arrays.deepEquals(this.saveBoard, other.saveBoard)
+			&& java.util.Arrays.deepEquals(this.saveColors, other.saveColors)
+			&& java.util.Arrays.equals(this.deck, other.deck)
+			&& this.deckLength == other.deckLength
+			&& java.util.Arrays.equals(this.hand, other.hand)
+			&& java.util.Arrays.equals(this.selectedCards, other.selectedCards)
+			&& this.dealtCardsCount == other.dealtCardsCount
+			&& this.selectedCardsCount == other.selectedCardsCount
+			&& this.hands == other.hands
+			&& this.discards == other.discards
+			&& this.sortType == other.sortType
+			&& java.util.Objects.equals(this.currentHandType, other.currentHandType)
+			&& this.currentPoints == other.currentPoints
+			&& this.currentMult == other.currentMult
+			&& this.currentScore == other.currentScore
+			&& java.util.Arrays.equals(this.targetNum, other.targetNum)
+			&& this.targetNumLength == other.targetNumLength
+			&& this.viewingHelp == other.viewingHelp
+			&& this.currentGoal == other.currentGoal
+			&& this.currentLevel == other.currentLevel;
+	}
 
 	/***** HELPER METHODS *****/
 
@@ -865,8 +1088,6 @@ public class Game
 			sb.append("\n"); // Add a new line after every line
 		}
 		printHandDisc(); // Print the hand and discard symbols
-
-		System.out.println(deckLength);
 		printDeckRemaining(); // print how many cards are left in the hand
 
 		System.out.println(sb.toString()); // Print entire board in one go to avoid flickering
@@ -895,7 +1116,8 @@ public class Game
 		erase(DECK_ROW -1, DECK_COL, CARD_WIDTH, 1); //Clear where the previous card count was so we don't get bad formatting when it goes to single digits
 		String[] deckRemaining = new String[1];
 		deckRemaining[0] = "(" + deckLength + "/52)";
-		stampBoard(deckRemaining, DECK_ROW - 1, DECK_COL, WHITE);
+		String[] centeredDeckRemaining = centerAscii(deckRemaining, CARD_WIDTH); // Piggyback off of our ascii center logic above the deck symbol
+		stampBoard(centeredDeckRemaining, DECK_ROW - 1, DECK_COL, WHITE); // Stamp the label
 	}
 
 	/**
@@ -1576,7 +1798,7 @@ public class Game
 		int inputWidth = 0; // This will hold the total width of the final ascii art
 		int longestLine = 0; // Int to keep track of the longest line in each ascii digit (not necessary for our currently uniform ascii art but fixes potential issues for other ascii digits)
 
-		for (int line = 0; line < 6; line++) // For each line of ascii art, check if it's the longest and update the longest if it is
+		for (int line = 0; line < asciiArray.length; line++) // For each line of ascii art, check if it's the longest and update the longest if it is
 			{
 				if (asciiArray[line].length() > longestLine)
 				{
@@ -1590,7 +1812,7 @@ public class Game
 		padding = padding.repeat((maxWidth - inputWidth)/2);
 
 		// Assemble the final ascii art
-		for (int line = 0; line < 6; line++) // For each line of ascii art
+		for (int line = 0; line < asciiArray.length; line++) // For each line of ascii art
 		{
 			outputArray[line] = padding; // Add the padding first
 			outputArray[line] += asciiArray[line]; // Add each line of ascii art on top of the alignment spaces
@@ -2525,7 +2747,7 @@ public class Game
 	/**
 	 * Debug method that prints the selected cards to the console for debugging.
 	 */
-	private static void testPrintSelected()
+	private void testPrintSelected()
 	{
 		for (int i = 0; i < selectedCards.length; i++)
 		{
@@ -2561,7 +2783,7 @@ public class Game
 	/**
 	 * Debug method that prints the entire deck to the console for debugging.
 	 */
-	private static void testPrintDeck()
+	private void testPrintDeck()
 	{
 		for (int i = 0; i < deck.length; i++)
 		{
