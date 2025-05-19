@@ -355,7 +355,7 @@ public class Game
 	private static final int LEVEL_ONE_GOAL = 250;
 	private static final int LEVEL_TWO_GOAL = 400;
 	private static final int LEVEL_THREE_GOAL = 750;
-	private static final int LEVEL_FOUR_GOAL = 1500;
+	private static final int LEVEL_FOUR_GOAL = 1250;
 	private static final int LEVEL_FIVE_GOAL = 2000;
 
 	// Color codes
