@@ -1,7 +1,7 @@
 /********************************************
-*	AUTHORS:	<your name>
-* COLLABORATORS: <name of peer, tutor, instructor>
-*	LAST MODIFIED:	<date of last change>
+*	AUTHORS:	Muhammad Conn
+* COLLABORATORS: Halia Hadi (professor)
+*	LAST MODIFIED:	19 May 2025
 ********************************************/
 
 /********************************************
